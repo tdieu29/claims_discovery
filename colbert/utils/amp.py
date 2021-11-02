@@ -1,19 +1,24 @@
 import torch
 
-PyTorch_over_1_6 = float('.'.join(torch.__version__.split('.')[0:2])) >= 1.6
+PyTorch_over_1_6 = float(".".join(torch.__version__.split(".")[0:2])) >= 1.6
 
 
-class NullContextManager(object):
+class NullContextManager:
     def __init__(self, dummy_resource=None):
         self.dummy_resource = dummy_resource
+
     def __enter__(self):
         return self.dummy_resource
+
     def __exit__(self, *args):
         pass
 
-class MixedPrecisionManager():
+
+class MixedPrecisionManager:
     def __init__(self, activated):
-        assert (not activated) or PyTorch_over_1_6, "Cannot use AMP for PyTorch version < 1.6"
+        assert (
+            not activated
+        ) or PyTorch_over_1_6, "Cannot use AMP for PyTorch version < 1.6"
 
         self.activated = activated
 

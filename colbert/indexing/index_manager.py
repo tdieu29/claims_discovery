@@ -1,7 +1,7 @@
 import torch
 
 
-class IndexManager():
+class IndexManager:
     def __init__(self, dim):
         self.dim = dim
 

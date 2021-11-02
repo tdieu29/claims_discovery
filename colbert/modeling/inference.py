@@ -1,14 +1,12 @@
-
 import torch
 
 from colbert.modeling.colbert import ColBERT
 from colbert.modeling.doc_tokenization import DocTokenizer
 from colbert.modeling.query_tokenization import QueryTokenizer
 from colbert.utils.amp import MixedPrecisionManager
-from colbert.parameters import DEVICE
 
 
-class ModelInference():
+class ModelInference:
     def __init__(self, colbert: ColBERT, amp=False):
         assert colbert.training is False
 
@@ -33,7 +31,10 @@ class ModelInference():
     def queryFromText(self, queries, bsize=None, to_cpu=False):
         if bsize:
             batches = self.query_tokenizer.tensorize(queries, bsize=bsize)
-            batches = [self.query(input_ids, attention_mask, to_cpu=to_cpu) for input_ids, attention_mask in batches]
+            batches = [
+                self.query(input_ids, attention_mask, to_cpu=to_cpu)
+                for input_ids, attention_mask in batches
+            ]
             return torch.cat(batches)
 
         input_ids, attention_mask = self.query_tokenizer.tensorize(queries)
@@ -43,8 +44,10 @@ class ModelInference():
         if bsize:
             batches, original_indices = self.doc_tokenizer.tensorize(docs, bsize=bsize)
 
-            batches = [self.doc(input_ids, attention_mask, keep_dims=keep_dims, to_cpu=to_cpu)
-                       for input_ids, attention_mask in batches]
+            batches = [
+                self.doc(input_ids, attention_mask, keep_dims=keep_dims, to_cpu=to_cpu)
+                for input_ids, attention_mask in batches
+            ]
 
             if keep_dims:
                 D = _stack_3D_tensors(batches)
@@ -58,16 +61,18 @@ class ModelInference():
 
 
 def _stack_3D_tensors(groups):
-    bsize = sum([x.size(0) for x in groups])
-    maxlen = max([x.size(1) for x in groups])
+    bsize = sum(x.size(0) for x in groups)
+    maxlen = max(x.size(1) for x in groups)
     hdim = groups[0].size(2)
 
-    output = torch.zeros(bsize, maxlen, hdim, device=groups[0].device, dtype=groups[0].dtype)
+    output = torch.zeros(
+        bsize, maxlen, hdim, device=groups[0].device, dtype=groups[0].dtype
+    )
 
     offset = 0
     for x in groups:
         endpos = offset + x.size(0)
-        output[offset:endpos, :x.size(1)] = x
+        output[offset:endpos, : x.size(1)] = x
         offset = endpos
 
     return output

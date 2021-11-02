@@ -1,20 +1,20 @@
+import itertools
 import os
+import queue
+import sqlite3
+import threading
 import time
+
+import numpy as np
 import torch
 import ujson
-import numpy as np
-import sqlite3
 
-import itertools
-import threading
-import queue
-
-from colbert.modeling.inference import ModelInference
-from colbert.utils.utils import print_message, load_colbert
 from colbert.indexing.index_manager import IndexManager
+from colbert.modeling.inference import ModelInference
+from colbert.utils.utils import load_colbert, print_message
 
 
-class CollectionEncoder():
+class CollectionEncoder:
     def __init__(self, args, process_idx=0, num_processes=1):
         self.args = args
         self.collection = args.collection
@@ -22,9 +22,9 @@ class CollectionEncoder():
         self.num_processes = num_processes
 
         assert 0.5 <= args.chunksize <= 128.0
-        max_bytes_per_file = args.chunksize * (1024*1024*1024)
+        max_bytes_per_file = args.chunksize * (1024 * 1024 * 1024)
 
-        max_bytes_per_doc = (self.args.doc_maxlen * self.args.dim * 2.0)
+        max_bytes_per_doc = self.args.doc_maxlen * self.args.dim * 2.0
 
         # Determine subset sizes for output
         minimum_subset_size = 10_000
@@ -36,7 +36,9 @@ class CollectionEncoder():
         self.print_main("#> args.index_root =", args.index_root)
         self.print_main(f"#> self.possible_subset_sizes = {self.possible_subset_sizes}")
 
-        self.db = sqlite3.connect(args.collection) # "cord19_data/database/articles.sqlite"
+        self.db = sqlite3.connect(
+            args.collection
+        )  # "cord19_data/database/articles.sqlite"
         self.cur = self.db.cursor()
 
         self.len_db = self.cur.execute("SELECT COUNT(*) FROM sections").fetchone()[0]
@@ -55,7 +57,9 @@ class CollectionEncoder():
             self._save_batch(*args)
 
     def _load_model(self):
-        self.colbert, self.checkpoint = load_colbert(self.args, do_print=(self.process_idx == 0))
+        self.colbert, self.checkpoint = load_colbert(
+            self.args, do_print=(self.process_idx == 0)
+        )
         self.colbert = self.colbert.cuda()
         self.colbert.eval()
 
@@ -69,7 +73,9 @@ class CollectionEncoder():
         t0 = time.time()
         local_docs_processed = 0
 
-        for batch_idx, (offset, lines, owner) in enumerate(self._batch_passages(self.iterator)):
+        for batch_idx, (offset, lines, owner) in enumerate(
+            self._batch_passages(self.iterator)
+        ):
             if owner != self.process_idx:
                 continue
 
@@ -86,10 +92,12 @@ class CollectionEncoder():
             this_encoding_throughput = compute_throughput(len(lines), t1, t2)
             this_saving_throughput = compute_throughput(len(lines), t2, t3)
 
-            self.print(f'#> Completed batch #{batch_idx} (starting at passage #{offset})\t'
-                          f'Passages/min: {overall_throughput} (overall), ',
-                          f'{this_encoding_throughput} (this encoding), ',
-                          f'{this_saving_throughput} (this saving)')
+            self.print(
+                f"#> Completed batch #{batch_idx} (starting at passage #{offset})\t"
+                f"Passages/min: {overall_throughput} (overall), ",
+                f"{this_encoding_throughput} (this encoding), ",
+                f"{this_saving_throughput} (this saving)",
+            )
         self.saver_queue.put(None)
 
         self.print("#> Joining saver thread.")
@@ -107,7 +115,7 @@ class CollectionEncoder():
             batch_size = np.random.choice(self.possible_subset_sizes)
 
             offset, endpos = self.position, min(self.position + batch_size, self.len_db)
-            self.position = endpos 
+            self.position = endpos
 
             L = [line for _, line in zip(range(offset, endpos), cur)]
 
@@ -126,7 +134,7 @@ class CollectionEncoder():
         batch = []
 
         for _, line in zip(range(offset, endpos), lines):
-            _, _, _, passage = line 
+            _, _, _, passage = line
 
             assert len(passage) >= 1
 
@@ -136,7 +144,9 @@ class CollectionEncoder():
 
     def _encode_batch(self, batch):
         with torch.no_grad():
-            embs = self.inference.docFromText(batch, bsize=self.args.bsize, keep_dims=False)
+            embs = self.inference.docFromText(
+                batch, bsize=self.args.bsize, keep_dims=False
+            )
             assert type(embs) is list
             assert len(embs) == len(batch)
 
@@ -148,21 +158,28 @@ class CollectionEncoder():
     def _save_batch(self, batch_idx, embs, doclens):
         start_time = time.time()
 
-        output_path = os.path.join(self.args.index_path, "{}.pt".format(batch_idx))
-        output_sample_path = os.path.join(self.args.index_path, "{}.sample".format(batch_idx))
-        doclens_path = os.path.join(self.args.index_path, 'doclens.{}.json'.format(batch_idx))
+        output_path = os.path.join(self.args.index_path, f"{batch_idx}.pt")
+        output_sample_path = os.path.join(self.args.index_path, f"{batch_idx}.sample")
+        doclens_path = os.path.join(self.args.index_path, f"doclens.{batch_idx}.json")
 
         # Save the embeddings.
         self.indexmgr.save(embs, output_path)
-        self.indexmgr.save(embs[torch.randint(0, high=embs.size(0), size=(embs.size(0) // 20,))], output_sample_path)
+        self.indexmgr.save(
+            embs[torch.randint(0, high=embs.size(0), size=(embs.size(0) // 20,))],
+            output_sample_path,
+        )
 
         # Save the doclens.
-        with open(doclens_path, 'w') as output_doclens:
+        with open(doclens_path, "w") as output_doclens:
             ujson.dump(doclens, output_doclens)
 
         throughput = compute_throughput(len(doclens), start_time, time.time())
-        self.print_main("#> Saved batch #{} to {} \t\t".format(batch_idx, output_path),
-                        "Saving Throughput =", throughput, "passages per minute.\n")
+        self.print_main(
+            f"#> Saved batch #{batch_idx} to {output_path} \t\t",
+            "Saving Throughput =",
+            throughput,
+            "passages per minute.\n",
+        )
 
     def print(self, *args):
         print_message("[" + str(self.process_idx) + "]", "\t\t", *args)
@@ -176,10 +193,10 @@ def compute_throughput(size, t0, t1):
     throughput = size / (t1 - t0) * 60
 
     if throughput > 1000 * 1000:
-        throughput = throughput / (1000*1000)
+        throughput = throughput / (1000 * 1000)
         throughput = round(throughput, 1)
-        return '{}M'.format(throughput)
+        return f"{throughput}M"
 
     throughput = throughput / (1000)
     throughput = round(throughput, 1)
-    return '{}k'.format(throughput)
+    return f"{throughput}k"

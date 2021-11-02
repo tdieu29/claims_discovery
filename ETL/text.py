@@ -1,29 +1,30 @@
 """
 Text module
 """
-import re 
+import re
 
-# Compiled pattern for cleaning text 
-PATTERN = None 
+# Compiled pattern for cleaning text
+PATTERN = None
+
 
 def getPattern():
     """
     Gets or builds a pre-compiled regex for cleaning text.
 
     Returns:
-        compiled regex 
+        compiled regex
     """
 
-    global PATTERN 
+    global PATTERN
 
     if not PATTERN:
-        # List of patterns 
+        # List of patterns
         patterns = []
 
-        # Remove emails 
+        # Remove emails
         patterns.append(r"\w+@\w+(\.[a-z]{2,})+")
 
-        # Remove urls 
+        # Remove urls
         patterns.append(r"http(s)?\:\/\/\S+")
 
         # Remove single characters repeated at least 3 times (ex. j o u r n a l)
@@ -31,7 +32,7 @@ def getPattern():
 
         # Remove citations references (ex. [3] [4] [5])
         patterns.append(r"(\[\d+\]\,?\s?){3,}(\.|\,)?")
-        
+
         # Remove citations references (ex. [3, 4, 5])
         patterns.append(r"\[[\d\,\s]+\]")
 
@@ -39,29 +40,30 @@ def getPattern():
         patterns.append(r"(\(\d+\)\s){3,}")
 
         PATTERN = re.compile("|".join(["(%s)" % p for p in patterns]))
-    
+
     return PATTERN
 
-class Text(object):
+
+class Text:
     """
     Methods for formatting and cleaning text.
     """
 
-    @staticmethod 
+    @staticmethod
     def transform(text):
         """Transforms and cleans text.
 
         Args:
-            text (str): input text line 
-        
-        Returns: 
-            transformed text 
+            text (str): input text line
+
+        Returns:
+            transformed text
         """
 
-        # Clean/ transform text 
+        # Clean/ transform text
         text = getPattern().sub(" ", text)
 
-        # Remove extra spacing either caused by replacements or already in text 
+        # Remove extra spacing either caused by replacements or already in text
         text = re.sub(r" {2,}|\.{2,}", " ", text)
 
-        return text 
+        return text
