@@ -9,7 +9,6 @@ python-dotenv==0.19.0
 typing-extensions==3.10.0.0
 Werkzeug==2.0.1
 zipp==3.5.0
-click==8.0.1
 colorama==0.4.4
 flake8==3.9.2
 Flask==2.0.1
@@ -45,7 +44,6 @@ certifi==2021.5.30
 cffi==1.14.6
 chardet==4.0.0
 charset-normalizer==2.0.4
-click
 colorama==0.4.4
 commonmark==0.9.1
 configobj==5.0.6
@@ -207,7 +205,6 @@ certifi==2021.5.30
 cffi==1.14.6
 chardet==4.0.0
 charset-normalizer==2.0.4
-click==7.1.2
 colorama==0.4.4
 commonmark==0.9.1
 configobj==5.0.6
