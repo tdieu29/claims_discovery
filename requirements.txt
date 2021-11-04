@@ -166,7 +166,6 @@ tornado==6.1
 tqdm==4.62.0
 traitlets==5.1.0
 transformers==4.9.1
-typing-extensions==3.10.0.2
 tzdata==2021.1
 tzlocal==3.0
 ujson==4.1.0
