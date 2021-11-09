@@ -42,7 +42,7 @@ dulwich==0.20.25
 dvc==2.7.4
 entrypoints==0.3
 fastapi==0.68.1
-filelock==3.0.12
+filelock
 flake8==3.9.2
 Flask==2.0.1
 flatten-dict==0.4.2
