@@ -6,6 +6,8 @@
 
 `source venv/Scripts/activate`
 
+`python -m pip install --upgrade pip setuptools wheel`
+
 2. Install requirements
 
 `pip install -r requirements.txt`
