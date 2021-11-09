@@ -1,12 +1,14 @@
-## Usage 
+## Usage
 
-1. Create and activate virtual environment 
+1. Create and activate virtual environment
 
 `python -m venv venv`
 
 `source venv/Scripts/activate`
 
-2. Install requirements 
+`python -m pip install --upgrade pip setuptools wheel`
+
+2. Install requirements
 
 `pip install -r requirements.txt`
 

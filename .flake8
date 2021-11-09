@@ -1,2 +1,6 @@
 [flake8]
-exclude = .git,__pycache__,venv
+exclude = .git,__pycache__,venv, app
+ignore = E501, W503, F841, E203, E722, E741
+
+# E722 do not use bare 'except'
+# E741 ambiguous variable name 'l'

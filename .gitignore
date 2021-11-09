@@ -1,3 +1,6 @@
 __pycache__
 venv
 .env
+app
+cord19_data
+stores
