@@ -51,6 +51,7 @@ class FaissIndex:
             self.emb2pid = torch.load(os.path.join(index_path, "emb2pid", "emb2pid.pt"))
         else:
             print_message("#> Building the emb2pid mapping..")
+            os.makedirs(os.path.join(index_path, "emb2pid"), exist_ok=True)
 
             all_doclens = flatten(all_doclens)
 
