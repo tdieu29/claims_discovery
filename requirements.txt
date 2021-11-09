@@ -7,7 +7,6 @@ Jinja2==3.0.1
 MarkupSafe==2.0.1
 python-dotenv==0.19.0
 typing-extensions==3.10.0.2
-gitWerkzeug==2.0.1
 zipp==3.5.0
 colorama==0.4.4
 flake8==3.9.2
