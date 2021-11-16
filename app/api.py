@@ -113,6 +113,3 @@ def _predict(request: Request, payload: RetrievePayload):
     }
 
     return response
-
-
-# uvicorn app.api:app --reload --reload-dir app
