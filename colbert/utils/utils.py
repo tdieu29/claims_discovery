@@ -1,21 +1,15 @@
-import datetime
 import itertools
 import os
+import sys
+from pathlib import Path
 
 import torch
 
-from colbert.modeling.colbert import ColBERT
-from colbert.parameters import DEVICE
+sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
 
-
-def print_message(*s, condition=True):
-    s = " ".join([str(x) for x in s])
-    msg = "[{}] {}".format(datetime.datetime.now().strftime("%b %d, %H:%M:%S"), s)
-
-    if condition:
-        print(msg, flush=True)
-
-    return msg
+from colbert.modeling.colbert import ColBERT  # noqa: E402
+from colbert.parameters import DEVICE  # noqa: E402
+from config.config import logger  # noqa: E402
 
 
 def grouper(iterable, n, fillvalue=None):
@@ -29,29 +23,29 @@ def grouper(iterable, n, fillvalue=None):
     return itertools.zip_longest(*args, fillvalue=fillvalue)
 
 
-def load_checkpoint(path, model, optimizer=None, do_print=True):
-    if do_print:
-        print_message("#> Loading checkpoint", path, "...")
+def load_checkpoint(path, model, optimizer=None, do_log=True):
+    if do_log:
+        logger.info(f"#> Loading checkpoint {path} ...")
 
     checkpoint = torch.load(path, map_location="cpu")
 
     try:
         model.load_state_dict(checkpoint["model_state_dict"])
     except:
-        print_message("[WARNING] Loading checkpoint with strict=False")
+        logger.warning("[WARNING] Loading checkpoint with strict=False")
         model.load_state_dict(checkpoint["model_state_dict"], strict=False)
 
     if optimizer:
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
 
-    if do_print:
-        print_message("#> checkpoint['epoch'] =", checkpoint["epoch"])
-        print_message("#> checkpoint['batch'] =", checkpoint["batch"])
+    if do_log:
+        logger.info(f"#> checkpoint['epoch'] = {checkpoint['epoch']}")
+        logger.info(f"#> checkpoint['batch'] = {checkpoint['batch']}")
 
     return checkpoint
 
 
-def load_colbert(args, do_print=True):
+def load_colbert(args, do_log=True):
     colbert = ColBERT(
         query_maxlen=args.query_maxlen,
         doc_maxlen=args.doc_maxlen,
@@ -61,9 +55,10 @@ def load_colbert(args, do_print=True):
     )
     colbert = colbert.to(DEVICE)
 
-    print_message("#> Loading model checkpoint.", condition=do_print)
+    if do_log:
+        logger.info("#> Loading model checkpoint.")
 
-    checkpoint = load_checkpoint(args.checkpoint, colbert, do_print=do_print)
+    checkpoint = load_checkpoint(args.checkpoint, colbert, do_log=do_log)
 
     colbert.eval()
 
@@ -72,11 +67,9 @@ def load_colbert(args, do_print=True):
 
 def create_directory(path):
     if os.path.exists(path):
-        print("\n")
-        print_message("#> Note: Output directory", path, "already exists\n\n")
+        logger.info(f"#> Note: Output directory {path} already exists.")
     else:
-        print("\n")
-        print_message("#> Creating directory", path, "\n\n")
+        logger.info(f"#> Creating directory {path}")
         os.makedirs(path)
 
 
