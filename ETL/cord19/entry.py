@@ -8,12 +8,17 @@ import re
 import sys
 import tempfile
 from datetime import datetime
+from pathlib import Path
 from urllib.request import urlretrieve
 
 import pandas as pd
 import requests
 
 from .execute import Execute
+
+sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
+
+from config.config import logger  # noqa: E402
 
 # Define remote URL and temporary directory
 URL = "https://ai2-semanticscholar-cord-19.s3-us-west-2.amazonaws.com"
@@ -64,7 +69,7 @@ class Entry:
             if current.day == 1 or date == dates[-1]:
                 url = f"{URL}/{date}/metadata.csv"
                 path = os.path.join(DIRECTORY, "%s.csv" % date)
-                print(f"Retrieving {url} to {path}")
+                logger.info(f"Retrieving {url} to {path}")
 
                 # Only pull  file if it's not already cached
                 if not os.path.exists(path):
