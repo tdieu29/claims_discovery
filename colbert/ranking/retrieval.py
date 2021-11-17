@@ -1,10 +1,15 @@
 import sqlite3
+import sys
 import time
 from collections import OrderedDict
+from pathlib import Path
 
-from colbert.modeling.inference import ModelInference
-from colbert.ranking.rankers import Ranker
-from colbert.utils.utils import batch
+sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
+
+from colbert.modeling.inference import ModelInference  # noqa: E402
+from colbert.ranking.rankers import Ranker  # noqa: E402
+from colbert.utils.utils import batch  # noqa: E402
+from config.config import logger  # noqa: E402
 
 
 def retrieve(args):
@@ -72,19 +77,22 @@ def retrieve(args):
                 highest_score = sorted_results[0][1][0]
                 top_article_id = sorted_results[0][0]
 
-                # print(qoffset+query_idx, q, len(sorted_results), highest_score, top_article_id,
-                #        milliseconds / (qoffset+query_idx+1), 'ms')
+                logger.info(
+                    f"query_idx: {qoffset+query_idx}"
+                    f"qid: {qid}"
+                    f"query: {q_text}"
+                    f"len(sorted_results): {len(sorted_results)}"
+                    f"top article id: {top_article_id}"
+                    f"highest score: {highest_score}"
+                    f"retrieval time per query: {milliseconds / (qoffset+query_idx+1)} ms"
+                )
 
-                # Retrieve abstracts of the top 50 articles
+                # Retrieve abstracts of the top 30 articles
                 top_30_articles = sorted_results[:30]
                 top_30_article_ids = [top_30_articles[i][0] for i in range(30)]
 
-                # Record results
+                # Record result
                 assert qid not in abstracts_retrieved
                 abstracts_retrieved[qid] = top_30_article_ids
-
-    print("\n\n")
-    print("#> Done.")
-    print("\n\n")
 
     return abstracts_retrieved
