@@ -1,15 +1,20 @@
 import os
+import sys
+from pathlib import Path
 
 import faiss
 import torch
 
-from colbert.indexing.loaders import load_doclens
-from colbert.utils.utils import flatten, print_message
+sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
+
+from colbert.indexing.loaders import load_doclens  # noqa: E402
+from colbert.utils.utils import flatten  # noqa: E402
+from config.config import logger  # noqa: E402
 
 
 class FaissIndex:
     def __init__(self, index_path, faiss_index_path, nprobe, part_range=None):
-        print_message("#> Loading the FAISS index from", faiss_index_path, "..")
+        logger.info(f"#> Loading the FAISS index from {faiss_index_path} ...")
 
         faiss_part_range = os.path.basename(faiss_index_path).split(".")
         if len(faiss_part_range) <= 3:
@@ -28,12 +33,12 @@ class FaissIndex:
         self.faiss_index = faiss.read_index(faiss_index_path)
         self.faiss_index.nprobe = nprobe
 
-        print_message("#> Building the emb2pid mapping..")
+        logger.info("#> Building the emb2pid mapping...")
         all_doclens = load_doclens(index_path, flatten=False)
 
         pid_offset = 0
         if faiss_part_range is not None:
-            print(f"#> Restricting all_doclens to the range {faiss_part_range}.")
+            logger.info(f"#> Restricting all_doclens to the range {faiss_part_range}.")
             pid_offset = len(flatten(all_doclens[: faiss_part_range.start]))
             all_doclens = all_doclens[faiss_part_range.start : faiss_part_range.stop]
 
@@ -45,12 +50,12 @@ class FaissIndex:
             a = len(flatten(all_doclens[: self.part_range.start - start]))
             b = len(flatten(all_doclens[: self.part_range.stop - start]))
             self.relative_range = range(a, b)
-            print(f"self.relative_range = {self.relative_range}")
+            logger.info(f"self.relative_range = {self.relative_range}")
         if os.path.exists(os.path.join(index_path, "emb2pid", "emb2pid.pt")):
-            print_message("#> Retrieving the emb2pid mapping..")
+            logger.info("#> Retrieving the emb2pid mapping...")
             self.emb2pid = torch.load(os.path.join(index_path, "emb2pid", "emb2pid.pt"))
         else:
-            print_message("#> Building the emb2pid mapping..")
+            logger.info("#> Building the emb2pid mapping..")
             os.makedirs(os.path.join(index_path, "emb2pid"), exist_ok=True)
 
             all_doclens = flatten(all_doclens)
@@ -68,7 +73,7 @@ class FaissIndex:
             # Save emb2pid mapping
             torch.save(self.emb2pid, os.path.join(index_path, "emb2pid.pt"))
 
-        print_message("len(self.emb2pid) =", len(self.emb2pid))
+        logger.info(f"len(self.emb2pid) = {len(self.emb2pid)}")
 
     def retrieve(self, faiss_depth, Q, verbose=False):
         embedding_ids = self.queries_to_embedding_ids(faiss_depth, Q, verbose=verbose)
@@ -87,10 +92,9 @@ class FaissIndex:
         Q_faiss = Q.view(num_queries * embeddings_per_query, dim).cpu().contiguous()
 
         # Search in large batches with faiss.
-        print_message(
-            "#> Search in batches with faiss. \t\t",
-            f"Q.size() = {Q.size()}, Q_faiss.size() = {Q_faiss.size()}",
-            condition=verbose,
+        logger.info(
+            "#> Search in batches with faiss. \t\t"
+            f"Q.size() = {Q.size()}, Q_faiss.size() = {Q_faiss.size()}"
         )
 
         embeddings_ids = []
@@ -98,10 +102,7 @@ class FaissIndex:
         for offset in range(0, Q_faiss.size(0), faiss_bsize):
             endpos = min(offset + faiss_bsize, Q_faiss.size(0))
 
-            print_message(
-                f"#> Searching from {offset} to {endpos}...",
-                condition=verbose,
-            )
+            logger.info(f"#> Searching from {offset} to {endpos}...")
 
             some_Q_faiss = Q_faiss[offset:endpos].float().numpy()
             _, some_embedding_ids = self.faiss_index.search(some_Q_faiss, faiss_depth)
@@ -119,24 +120,20 @@ class FaissIndex:
     def embedding_ids_to_pids(self, embedding_ids, verbose=True):
 
         # Find unique PIDs per query.
-        print_message("#> Lookup the PIDs..", condition=verbose)
+        logger.info("#> Lookup the PIDs..")
         all_pids = self.emb2pid[embedding_ids]
 
-        print_message(
-            f"#> Converting to a list [shape = {all_pids.size()}]..", condition=verbose
-        )
+        logger.info(f"#> Converting to a list [shape = {all_pids.size()}]..")
         all_pids = all_pids.tolist()
 
-        print_message(
-            "#> Removing duplicates (in parallel if large enough)..", condition=verbose
-        )
+        logger.info("#> Removing duplicates (in parallel if large enough)..")
 
         if len(all_pids) > 5000:
             all_pids = list(self.parallel_pool.map(uniq, all_pids))
         else:
             all_pids = list(map(uniq, all_pids))
 
-        print_message("#> Done with embedding_ids_to_pids().", condition=verbose)
+        logger.info("#> Done with embedding_ids_to_pids().")
 
         return all_pids
 
