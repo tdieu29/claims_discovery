@@ -1,9 +1,15 @@
+import sys
+from pathlib import Path
+
 import torch
 
-from colbert.indexing.index_manager import load_index_part
-from colbert.indexing.loaders import get_parts, load_doclens
-from colbert.ranking.index_ranker import IndexRanker
-from colbert.utils.utils import flatten, print_message
+sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
+
+from colbert.indexing.index_manager import load_index_part  # noqa: E402
+from colbert.indexing.loaders import get_parts, load_doclens  # noqa: E402
+from colbert.ranking.index_ranker import IndexRanker  # noqa: E402
+from colbert.utils.utils import flatten  # noqa: E402
+from config.config import logger  # noqa: E402
 
 
 class IndexPart:
@@ -49,11 +55,11 @@ class IndexPart:
         tensor = torch.zeros(self.num_embeddings + 512, dim, dtype=torch.float16)
 
         if verbose:
-            print_message("tensor.size() = ", tensor.size())
+            logger.info(f"tensor.size() = {tensor.size()}")
 
         offset = 0
         for idx, filename in enumerate(self.parts_paths):
-            print_message("|> Loading", filename, "...", condition=verbose)
+            logger.info(f"|> Loading {filename} ...")
 
             endpos = offset + sum(self.parts_doclens[idx])
             part = load_index_part(filename, verbose=verbose)
