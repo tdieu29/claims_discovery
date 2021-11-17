@@ -1,5 +1,7 @@
 import random
+import sys
 import time
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -7,17 +9,19 @@ import torch.nn as nn
 import wandb
 from transformers import AdamW
 
-from colbert.modeling.colbert import ColBERT
-from colbert.parameters import DEVICE
-from colbert.training.batcher import Batcher
-from colbert.training.batcher_pretrain import Batcher_Pretrain
-from colbert.training.utils import (
+sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
+
+from colbert.modeling.colbert import ColBERT  # noqa: E402
+from colbert.parameters import DEVICE  # noqa: E402
+from colbert.training.batcher import Batcher  # noqa: E402
+from colbert.training.batcher_pretrain import Batcher_Pretrain  # noqa: E402
+from colbert.training.utils import (  # noqa: E402
+    log_progress,
     manage_checkpoints,
     manage_checkpoints_pretrain,
-    print_progress,
 )
-from colbert.utils.amp import MixedPrecisionManager
-from colbert.utils.utils import print_message
+from colbert.utils.amp import MixedPrecisionManager  # noqa: E402
+from config.config import logger  # noqa: E402
 
 
 def train(args):
@@ -40,14 +44,14 @@ def train(args):
     )
 
     if args.checkpoint is not None:
-        print_message(f"#> Starting from checkpoint {args.checkpoint}")
+        logger.info(f"#> Starting from checkpoint {args.checkpoint}")
         checkpoint = torch.load(args.checkpoint, map_location="cpu")
 
         try:
-            print_message("#> Loading model state dict")
+            logger.info("#> Loading model state dict")
             colbert.load_state_dict(checkpoint["model_state_dict"])
         except:
-            print_message("[WARNING] Loading checkpoint with strict=False")
+            logger.warning("[WARNING] Loading checkpoint with strict=False")
             colbert.load_state_dict(checkpoint["model_state_dict"], strict=False)
 
     colbert = colbert.to(DEVICE)
@@ -59,7 +63,7 @@ def train(args):
 
     if args.resume_optimizer is True:
         assert args.checkpoint is not None
-        print_message("#> Loading optimizer state dict")
+        logger.info("#> Loading optimizer state dict")
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
 
     optimizer.zero_grad()
@@ -125,7 +129,7 @@ def train(args):
                     loss = criterion(scores, labels[: scores.size(0)])
                     loss = (loss / 2) / args.accumsteps
 
-                    print_progress(scores)
+                    log_progress(scores)
 
                 amp.backward(loss)
 
@@ -140,17 +144,17 @@ def train(args):
                 num_examples_seen = (batch_idx - start_batch_idx) * args.bsize
                 elapsed = float(time.time() - start_time)
 
-                # Print messages
-                print_message(epoch_idx, batch_idx, avg_loss)
+                # Log messages
+                logger.info(epoch_idx, batch_idx, avg_loss)
                 if not args.pretrain:
-                    print(
+                    logger.info(
                         "position_nf: ",
                         position_nf,
                         "\t\t|\t\t",
                         "position_bioS: ",
                         position_bioS,
                     )
-                    print(
+                    logger.info(
                         "switch_to_bioS: ",
                         switch_to_bioS,
                         "\t\t|\t\t",
