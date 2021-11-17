@@ -1,10 +1,15 @@
 import math
 import os
 import random
+import sys
+from pathlib import Path
 
-from colbert.indexing.faiss import index_faiss
-from colbert.indexing.loaders import load_doclens
-from colbert.utils.parser import Arguments
+sys.path.insert(1, Path(__file__).parent.parent.absolute().__str__())
+
+from colbert.indexing.faiss import index_faiss  # noqa: E402
+from colbert.indexing.loaders import load_doclens  # noqa: E402
+from colbert.utils.parser import Arguments  # noqa: E402
+from config.config import logger  # noqa: E402
 
 
 def main():
@@ -26,18 +31,15 @@ def main():
     assert os.path.exists(args.index_path), args.index_path
 
     num_embeddings = sum(load_doclens(args.index_path))
-    print("#> num_embeddings =", num_embeddings)
+    logger.info(f"#> num_embeddings = {num_embeddings}")
 
     if args.partitions is None:
         args.partitions = 1 << math.ceil(math.log2(8 * math.sqrt(num_embeddings)))
-        print("\n\n")
-        print("You did not specify --partitions!")
-        print(
-            "Default computation chooses",
-            args.partitions,
-            f"partitions (for {num_embeddings} embeddings)",
+        logger.info(
+            "You did not specify --partitions!\n"
+            f"Default computation chooses {args.partitions} partitions"
+            f"(for {num_embeddings} embeddings)"
         )
-        print("\n\n")
 
     index_faiss(args)
 
