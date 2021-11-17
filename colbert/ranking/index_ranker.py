@@ -1,9 +1,13 @@
+import sys
 from itertools import accumulate
+from pathlib import Path
 
 import torch
 
-from colbert.parameters import DEVICE
-from colbert.utils.utils import print_message
+sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
+
+from colbert.parameters import DEVICE  # noqa: E402
+from config.config import logger  # noqa: E402
 
 BSIZE = 1 << 14  # BSIZE = 16384
 
@@ -25,7 +29,7 @@ class IndexRanker:
         self.strides.append(self.doclens.max().item())
         self.strides = sorted(list(set(self.strides)))
 
-        print_message(f"#> Using strides {self.strides}..")
+        logger.info(f"#> Using strides {self.strides}...")
 
         self.views = self._create_views(self.tensor)
         self.buffers = self._create_buffers(BSIZE, self.tensor.dtype, {"cpu", "cuda:0"})
