@@ -2,16 +2,21 @@ import itertools
 import os
 import queue
 import sqlite3
+import sys
 import threading
 import time
+from pathlib import Path
 
 import numpy as np
 import torch
 import ujson
 
-from colbert.indexing.index_manager import IndexManager
-from colbert.modeling.inference import ModelInference
-from colbert.utils.utils import load_colbert, print_message
+sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
+
+from colbert.indexing.index_manager import IndexManager  # noqa: E402
+from colbert.modeling.inference import ModelInference  # noqa: E402
+from colbert.utils.utils import load_colbert  # noqa: E402
+from config.config import logger  # noqa: E402
 
 
 class CollectionEncoder:
@@ -32,13 +37,11 @@ class CollectionEncoder:
         maximum_subset_size = max(minimum_subset_size, maximum_subset_size)
         self.possible_subset_sizes = [int(maximum_subset_size)]
 
-        self.print_main("#> Local args.bsize =", args.bsize)
-        self.print_main("#> args.index_root =", args.index_root)
-        self.print_main(f"#> self.possible_subset_sizes = {self.possible_subset_sizes}")
+        self.log_main(f"#> Local args.bsize = {args.bsize}")
+        self.log_main(f"#> args.index_root = {args.index_root}")
+        self.log_main(f"#> self.possible_subset_sizes = {self.possible_subset_sizes}")
 
-        self.db = sqlite3.connect(
-            args.collection
-        )  # "cord19_data/database/articles.sqlite"
+        self.db = sqlite3.connect(args.collection)
         self.cur = self.db.cursor()
 
         self.len_db = self.cur.execute("SELECT COUNT(*) FROM sections").fetchone()[0]
@@ -58,7 +61,7 @@ class CollectionEncoder:
 
     def _load_model(self):
         self.colbert, self.checkpoint = load_colbert(
-            self.args, do_print=(self.process_idx == 0)
+            self.args, do_log=(self.process_idx == 0)
         )
         self.colbert = self.colbert.cuda()
         self.colbert.eval()
@@ -92,15 +95,15 @@ class CollectionEncoder:
             this_encoding_throughput = compute_throughput(len(lines), t1, t2)
             this_saving_throughput = compute_throughput(len(lines), t2, t3)
 
-            self.print(
+            self.log(
                 f"#> Completed batch #{batch_idx} (starting at passage #{offset})\t"
-                f"Passages/min: {overall_throughput} (overall), ",
-                f"{this_encoding_throughput} (this encoding), ",
-                f"{this_saving_throughput} (this saving)",
+                f"Passages/min: {overall_throughput} (overall), "
+                f"{this_encoding_throughput} (this encoding), "
+                f"{this_saving_throughput} (this saving)."
             )
         self.saver_queue.put(None)
 
-        self.print("#> Joining saver thread.")
+        self.log("#> Joining saver thread.")
         thread.join()
 
         self.db.close()
@@ -124,7 +127,7 @@ class CollectionEncoder:
             if len(L) < batch_size:
                 break
 
-        self.print("[NOTE] Done with local share.")
+        self.log("[NOTE] Done with local share.")
 
         return
 
@@ -174,19 +177,17 @@ class CollectionEncoder:
             ujson.dump(doclens, output_doclens)
 
         throughput = compute_throughput(len(doclens), start_time, time.time())
-        self.print_main(
-            f"#> Saved batch #{batch_idx} to {output_path} \t\t",
-            "Saving Throughput =",
-            throughput,
-            "passages per minute.\n",
+        self.log_main(
+            f"#> Saved batch #{batch_idx} to {output_path}\n"
+            f"Saving Throughput = {throughput} passages per minute."
         )
 
-    def print(self, *args):
-        print_message("[" + str(self.process_idx) + "]", "\t\t", *args)
+    def log(self, *args):
+        logger.info(*args)
 
-    def print_main(self, *args):
+    def log_main(self, *args):
         if self.process_idx == 0:
-            self.print(*args)
+            self.log(*args)
 
 
 def compute_throughput(size, t0, t1):
