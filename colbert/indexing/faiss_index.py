@@ -1,9 +1,13 @@
+import sys
 import time
+from pathlib import Path
 
 import faiss
 
-from colbert.indexing.faiss_index_gpu import FaissIndexGPU
-from colbert.utils.utils import print_message
+sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
+
+from colbert.indexing.faiss_index_gpu import FaissIndexGPU  # noqa: E402
+from config.config import logger  # noqa: E402
 
 
 class FaissIndex:
@@ -24,14 +28,14 @@ class FaissIndex:
         return quantizer, index
 
     def train(self, train_data):
-        print_message(f"#> Training now (using {self.gpu.ngpu} GPUs)...")
+        logger.info(f"#> Training now (using {self.gpu.ngpu} GPUs)...")
 
         if self.gpu.ngpu > 0:
             self.gpu.training_initialize(self.index, self.quantizer)
 
         s = time.time()
         self.index.train(train_data)
-        print("Index training time: ", time.time() - s)
+        logger.info(f"Index training time: {time.time() - s}")
 
         if self.gpu.ngpu > 0:
             self.gpu.training_finalize()
@@ -39,7 +43,7 @@ class FaissIndex:
         assert self.index.is_trained
 
     def add(self, data):
-        print_message(f"Add data with shape {data.shape} (offset = {self.offset})..")
+        logger.info(f"Add data with shape {data.shape} (offset = {self.offset})..")
 
         if self.gpu.ngpu > 0 and self.offset == 0:
             self.gpu.adding_initialize(self.index)
@@ -52,7 +56,7 @@ class FaissIndex:
         self.offset += data.shape[0]
 
     def save(self, output_path):
-        print_message(f"Writing index to {output_path} ...")
+        logger.info(f"Writing index to {output_path} ...")
 
         self.index.nprobe = self.nprobe
         faiss.write_index(self.index, output_path)
