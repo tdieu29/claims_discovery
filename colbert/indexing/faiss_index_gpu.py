@@ -4,11 +4,14 @@
 
 import sys
 import time
+from pathlib import Path
 
 import faiss
 import numpy as np
 
-from colbert.utils.utils import print_message
+sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
+
+from config.config import logger  # noqa: E402
 
 
 class FaissIndexGPU:
@@ -26,7 +29,7 @@ class FaissIndexGPU:
         self.gpu_resources = self._prepare_gpu_resources()
 
     def _prepare_gpu_resources(self):
-        print_message(f"Preparing resources for {self.ngpu} GPUs.")
+        logger.info(f"Preparing resources for {self.ngpu} GPUs.")
 
         gpu_resources = []
 
@@ -64,7 +67,7 @@ class FaissIndexGPU:
         self.index_ivf = faiss.extract_index_ivf(index)
         self.clustering_index = faiss.index_cpu_to_all_gpus(quantizer)
         self.index_ivf.clustering_index = self.clustering_index
-        print(time.time() - s)
+        logger.info(f"training_initialize time: {time.time() - s}")
 
     def training_finalize(self):
         assert self.ngpu > 0
@@ -73,7 +76,7 @@ class FaissIndexGPU:
         self.index_ivf.clustering_index = faiss.index_gpu_to_cpu(
             self.index_ivf.clustering_index
         )
-        print(time.time() - s)
+        logger.info(f"training_finalize time: {time.time() - s}")
 
     def adding_initialize(self, index):
         """
@@ -111,20 +114,18 @@ class FaissIndexGPU:
             if self.max_add > 0 and self.gpu_index.ntotal > self.max_add:
                 self._flush_to_cpu(index, nb, offset)
 
-            print("\r%d/%d (%.3f s)  " % (i0, nb, time.time() - t0), end=" ")
-            sys.stdout.flush()
+            logger.info("\r%d/%d (%.3f s)" % (i0, nb, time.time() - t0))
 
         if self.gpu_index.ntotal > 0:
             self._flush_to_cpu(index, nb, offset)
 
         assert index.ntotal == offset + nb, (index.ntotal, offset + nb, offset, nb)
-        print(
-            f"add(.) time: %.3f s \t\t--\t\t index.ntotal = {index.ntotal}"
-            % (time.time() - t0)
+        logger.info(
+            f"add time: %.3f s | index.ntotal = {index.ntotal}" % (time.time() - t0)
         )
 
     def _flush_to_cpu(self, index, nb, offset):
-        print("Flush indexes to CPU")
+        logger.info("Flush indexes to CPU")
 
         for i in range(self.ngpu):
             index_src_gpu = faiss.downcast_index(
