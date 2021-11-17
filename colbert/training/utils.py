@@ -1,23 +1,25 @@
+import sys
+from pathlib import Path
+
 import torch
 
-from colbert.parameters import SAVED_CHECKPOINTS
+sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
+
+from colbert.parameters import SAVED_CHECKPOINTS  # noqa: E402
+from config.config import logger  # noqa: E402
 
 
-def print_progress(scores):
+def log_progress(scores):
     positive_avg, negative_avg = round(scores[:, 0].mean().item(), 2), round(
         scores[:, 1].mean().item(), 2
     )
-    print(
-        "#>>>   ",
-        positive_avg,
-        negative_avg,
-        "\t\t|\t\t",
-        round(positive_avg - negative_avg, 3),
+    logger.info(
+        f"#>>>   {positive_avg} {negative_avg} \t\t|\t\t {round(positive_avg - negative_avg, 3)}"
     )
 
 
 def save_checkpoint_pretrain(path, epoch_idx, b_idx, train_loss, model, optimizer):
-    print(f"#> Saving a checkpoint to {path}")
+    logger.info(f"#> Saving a checkpoint to {path}")
 
     checkpoint = {}
     checkpoint["epoch"] = epoch_idx
@@ -42,7 +44,7 @@ def manage_checkpoints_pretrain(epoch_idx, batch_idx, train_loss, colbert, optim
 def save_checkpoint(
     path, epoch_idx, b_idx, train_loss, model, optimizer, position_nf, position_bioS
 ):
-    print(f"#> Saving a checkpoint to {path}")
+    logger.info(f"#> Saving a checkpoint to {path}")
 
     checkpoint = {}
     checkpoint["epoch"] = epoch_idx
