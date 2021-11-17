@@ -1,12 +1,16 @@
 import csv
 import pickle
 import random
+import sys
 from functools import partial
+from pathlib import Path
 
-from colbert.modeling.doc_tokenization import DocTokenizer
-from colbert.modeling.query_tokenization import QueryTokenizer
-from colbert.modeling.utils import tensorize_triples
-from colbert.utils.utils import print_message
+sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
+
+from colbert.modeling.doc_tokenization import DocTokenizer  # noqa: E402
+from colbert.modeling.query_tokenization import QueryTokenizer  # noqa: E402
+from colbert.modeling.utils import tensorize_triples  # noqa: E402
+from config.config import logger  # noqa: E402
 
 
 class Batcher_Pretrain:
@@ -29,7 +33,7 @@ class Batcher_Pretrain:
     def _load_triples(self, path):
         random.seed(12345)
 
-        print_message("#> Loading triples...")
+        logger.info("#> Loading triples...")
 
         triples = []
 
@@ -47,7 +51,7 @@ class Batcher_Pretrain:
         return shuffled_triples
 
     def _load_queries(self, path):
-        print_message("#> Loading queries...")
+        logger.info("#> Loading queries...")
 
         with open(path, "rb") as f:
             queries = pickle.load(f)
@@ -55,7 +59,7 @@ class Batcher_Pretrain:
         return queries
 
     def _load_collection(self, path):
-        print_message("#> Loading collection...")
+        logger.info("#> Loading collection...")
 
         with open(path, "rb") as f:
             collection = pickle.load(f)
@@ -103,7 +107,7 @@ class Batcher_Pretrain:
         return self.tensorize_triples(queries, positives, negatives, len(queries) // 2)
 
     def skip_to_batch(self, batch_idx, intended_batch_size):
-        print(
+        logger.info(
             f"Skipping to batch #{batch_idx} (with intended_batch_size = {intended_batch_size}) for training."
         )
         self.position = intended_batch_size * batch_idx
