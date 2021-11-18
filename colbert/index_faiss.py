@@ -1,15 +1,11 @@
 import math
 import os
 import random
-import sys
-from pathlib import Path
 
-sys.path.insert(1, Path(__file__).parent.parent.absolute().__str__())
-
-from colbert.indexing.faiss import index_faiss  # noqa: E402
-from colbert.indexing.loaders import load_doclens  # noqa: E402
-from colbert.utils.parser import Arguments  # noqa: E402
-from config.config import logger  # noqa: E402
+from colbert.indexing.faiss import index_faiss
+from colbert.indexing.loaders import load_doclens
+from colbert.utils.parser import Arguments
+from config.config import logger
 
 
 def main():
