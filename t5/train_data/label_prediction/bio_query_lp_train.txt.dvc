@@ -1,0 +1,4 @@
+outs:
+- md5: ba146cf7aa148780e1aa61f3acc761bf
+  size: 67002
+  path: bio_query_lp_train.txt
