@@ -1,15 +1,11 @@
 import sqlite3
-import sys
 import time
 from collections import OrderedDict
-from pathlib import Path
 
-sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
-
-from colbert.modeling.inference import ModelInference  # noqa: E402
-from colbert.ranking.rankers import Ranker  # noqa: E402
-from colbert.utils.utils import batch  # noqa: E402
-from config.config import logger  # noqa: E402
+from colbert.modeling.inference import ModelInference
+from colbert.ranking.rankers import Ranker
+from colbert.utils.utils import batch
+from config.config import logger
 
 
 def retrieve(args):
