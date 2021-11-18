@@ -8,17 +8,14 @@ import re
 import sys
 import tempfile
 from datetime import datetime
-from pathlib import Path
 from urllib.request import urlretrieve
 
 import pandas as pd
 import requests
 
+from config.config import logger
+
 from .execute import Execute
-
-sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
-
-from config.config import logger  # noqa: E402
 
 # Define remote URL and temporary directory
 URL = "https://ai2-semanticscholar-cord-19.s3-us-west-2.amazonaws.com"
