@@ -103,7 +103,8 @@ def main():
 
     device = torch.device("cuda")
     torch.manual_seed(1234)
-    args = parser.parse_args(lp_params)
+    params_list = lp_params()
+    args = parser.parse_args(params_list)
 
     model = AutoModelForSeq2SeqLM.from_pretrained(args.base_model)
     tokenizer = AutoTokenizer.from_pretrained(args.base_model)
