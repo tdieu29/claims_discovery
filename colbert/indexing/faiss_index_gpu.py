@@ -2,16 +2,12 @@
     Heavily based on: https://github.com/facebookresearch/faiss/blob/master/benchs/bench_gpu_1bn.py
 """
 
-import sys
 import time
-from pathlib import Path
 
 import faiss
 import numpy as np
 
-sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
-
-from config.config import logger  # noqa: E402
+from config.config import logger
 
 
 class FaissIndexGPU:

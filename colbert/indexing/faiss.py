@@ -1,19 +1,15 @@
 import math
 import os
 import queue
-import sys
 import threading
-from pathlib import Path
 
 import torch
 
-sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
-
-from colbert.indexing.faiss_index import FaissIndex  # noqa: E402
-from colbert.indexing.index_manager import load_index_part  # noqa: E402
-from colbert.indexing.loaders import get_parts  # noqa: E402
-from colbert.utils.utils import grouper  # noqa: E402
-from config.config import logger  # noqa: E402
+from colbert.indexing.faiss_index import FaissIndex
+from colbert.indexing.index_manager import load_index_part
+from colbert.indexing.loaders import get_parts
+from colbert.utils.utils import grouper
+from config.config import logger
 
 
 def get_faiss_index_name(args, offset=None, endpos=None):

@@ -1,13 +1,9 @@
-import sys
 import time
-from pathlib import Path
 
 import faiss
 
-sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
-
-from colbert.indexing.faiss_index_gpu import FaissIndexGPU  # noqa: E402
-from config.config import logger  # noqa: E402
+from colbert.indexing.faiss_index_gpu import FaissIndexGPU
+from config.config import logger
 
 
 class FaissIndex:

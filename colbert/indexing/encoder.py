@@ -2,21 +2,17 @@ import itertools
 import os
 import queue
 import sqlite3
-import sys
 import threading
 import time
-from pathlib import Path
 
 import numpy as np
 import torch
 import ujson
 
-sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
-
-from colbert.indexing.index_manager import IndexManager  # noqa: E402
-from colbert.modeling.inference import ModelInference  # noqa: E402
-from colbert.utils.utils import load_colbert  # noqa: E402
-from config.config import logger  # noqa: E402
+from colbert.indexing.index_manager import IndexManager
+from colbert.modeling.inference import ModelInference
+from colbert.utils.utils import load_colbert
+from config.config import logger
 
 
 class CollectionEncoder:
