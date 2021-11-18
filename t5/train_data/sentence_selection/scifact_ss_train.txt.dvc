@@ -1,0 +1,4 @@
+outs:
+- md5: 395ef1ffdd0ebee85e03d4027ca13007
+  size: 66995
+  path: scifact_ss_train.txt
