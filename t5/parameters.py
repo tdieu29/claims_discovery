@@ -2,13 +2,13 @@
 def ss_params():
     triples_path = [
         "--triples_path",
-        "/content/drive/MyDrive/NLP_Final_Project/Sentence_Selection/scifact_ss_train.txt",
-        "/content/drive/MyDrive/NLP_Final_Project/Sentence_Selection/bio_claim_ss_train.txt",
-        "/content/drive/MyDrive/NLP_Final_Project/Sentence_Selection/bio_query_ss_train.txt",
+        "t5/train_data/sentence_selection/scifact_ss_train.txt",
+        "t5/train_data/sentence_selection/bio_claim_ss_train.txt",
+        "t5/train_data/sentence_selection/bio_query_ss_train.txt",
     ]
     output_model_path = [
         "--output_model_path",
-        "/content/drive/MyDrive/NLP_Final_Project/Sentence_Selection/3e-4_4epochs",
+        "t5/checkpoints/sentence_selection",
     ]
     final_list = triples_path + output_model_path
     return final_list
@@ -18,13 +18,13 @@ def ss_params():
 def lp_params():
     triples_path = [
         "--triples_path",
-        "/content/drive/MyDrive/NLP_Final_Project/Label_Prediction/scifact_lp_train.txt",
-        "/content/drive/MyDrive/NLP_Final_Project/Label_Prediction/bio_claim_lp_train.txt",
-        "/content/drive/MyDrive/NLP_Final_Project/Label_Prediction/bio_query_lp_train.txt",
+        "t5/train_data/label_prediction/scifact_lp_train.txt",
+        "t5/train_data/label_prediction/bio_claim_lp_train.txt",
+        "t5/train_data/label_prediction/bio_query_lp_train.txt",
     ]
     output_model_path = [
         "--output_model_path",
-        "/content/drive/MyDrive/NLP_Final_Project/Label_Prediction/3e-4_6epochs",
+        "t5/checkpoints/label_prediction",
     ]
     final_list = triples_path + output_model_path
     return final_list
