@@ -1,15 +1,12 @@
-import sys
 from itertools import accumulate
-from pathlib import Path
 
 import torch
 
-sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
+from colbert.parameters import DEVICE
+from config.config import logger
 
-from colbert.parameters import DEVICE  # noqa: E402
-from config.config import logger  # noqa: E402
-
-BSIZE = 1 << 14  # BSIZE = 16384
+# BSIZE = 1 << 14  # 16384
+BSIZE = 5000
 
 
 class IndexRanker:
