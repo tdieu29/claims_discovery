@@ -1,15 +1,11 @@
 import itertools
 import os
-import sys
-from pathlib import Path
 
 import torch
 
-sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
-
-from colbert.modeling.colbert import ColBERT  # noqa: E402
-from colbert.parameters import DEVICE  # noqa: E402
-from config.config import logger  # noqa: E402
+from colbert.modeling.colbert import ColBERT
+from colbert.parameters import DEVICE
+from config.config import logger
 
 
 def grouper(iterable, n, fillvalue=None):
