@@ -1,16 +1,12 @@
 import csv
 import pickle
 import random
-import sys
 from functools import partial
-from pathlib import Path
 
-sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
-
-from colbert.modeling.doc_tokenization import DocTokenizer  # noqa: E402
-from colbert.modeling.query_tokenization import QueryTokenizer  # noqa: E402
-from colbert.modeling.utils import tensorize_triples  # noqa: E402
-from config.config import logger  # noqa: E402
+from colbert.modeling.doc_tokenization import DocTokenizer
+from colbert.modeling.query_tokenization import QueryTokenizer
+from colbert.modeling.utils import tensorize_triples
+from config.config import logger
 
 
 class Batcher:
