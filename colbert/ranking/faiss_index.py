@@ -1,15 +1,11 @@
 import os
-import sys
-from pathlib import Path
 
 import faiss
 import torch
 
-sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
-
-from colbert.indexing.loaders import load_doclens  # noqa: E402
-from colbert.utils.utils import flatten  # noqa: E402
-from config.config import logger  # noqa: E402
+from colbert.indexing.loaders import load_doclens
+from colbert.utils.utils import flatten
+from config.config import logger
 
 
 class FaissIndex:
