@@ -1,7 +1,5 @@
 import random
-import sys
 import time
-from pathlib import Path
 
 import numpy as np
 import torch
@@ -9,19 +7,17 @@ import torch.nn as nn
 import wandb
 from transformers import AdamW
 
-sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
-
-from colbert.modeling.colbert import ColBERT  # noqa: E402
-from colbert.parameters import DEVICE  # noqa: E402
-from colbert.training.batcher import Batcher  # noqa: E402
-from colbert.training.batcher_pretrain import Batcher_Pretrain  # noqa: E402
-from colbert.training.utils import (  # noqa: E402
+from colbert.modeling.colbert import ColBERT
+from colbert.parameters import DEVICE
+from colbert.training.batcher import Batcher
+from colbert.training.batcher_pretrain import Batcher_Pretrain
+from colbert.training.utils import (
     log_progress,
     manage_checkpoints,
     manage_checkpoints_pretrain,
 )
-from colbert.utils.amp import MixedPrecisionManager  # noqa: E402
-from config.config import logger  # noqa: E402
+from colbert.utils.amp import MixedPrecisionManager
+from config.config import logger
 
 
 def train(args):
