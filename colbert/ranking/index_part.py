@@ -1,15 +1,10 @@
-import sys
-from pathlib import Path
-
 import torch
 
-sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
-
-from colbert.indexing.index_manager import load_index_part  # noqa: E402
-from colbert.indexing.loaders import get_parts, load_doclens  # noqa: E402
-from colbert.ranking.index_ranker import IndexRanker  # noqa: E402
-from colbert.utils.utils import flatten  # noqa: E402
-from config.config import logger  # noqa: E402
+from colbert.indexing.index_manager import load_index_part
+from colbert.indexing.loaders import get_parts, load_doclens
+from colbert.ranking.index_ranker import IndexRanker
+from colbert.utils.utils import flatten
+from config.config import logger
 
 
 class IndexPart:
