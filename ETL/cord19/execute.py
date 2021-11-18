@@ -5,18 +5,14 @@ Transforms and loads CORD-19 data into an articles database.
 import csv
 import hashlib
 import os.path
-import sys
 from multiprocessing import Pool
-from pathlib import Path
+
+from config.config import logger
 
 from ..article import Article
 from ..sqlite import SQLite
 from .section import Section
 from .sentence import Sentence
-
-sys.path.insert(1, Path(__file__).parent.parent.parent.absolute().__str__())
-
-from config.config import logger  # noqa: E402
 
 
 class Execute:
