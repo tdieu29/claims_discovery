@@ -3,7 +3,7 @@ import os
 import ujson
 
 
-def get_parts(directory):
+def get_parts(directory, index=None, step=None):
     extension = ".pt"
 
     parts = sorted(
@@ -22,11 +22,18 @@ def get_parts(directory):
         os.path.join(directory, f"{filename}.sample") for filename in parts
     ]
 
+    if index is not None:
+        parts, parts_paths, samples_paths = (
+            parts[index : index + step],
+            parts_paths[index : index + step],
+            samples_paths[index : index + step],
+        )
+
     return parts, parts_paths, samples_paths
 
 
-def load_doclens(directory, flatten=True):
-    parts, _, _ = get_parts(directory)
+def load_doclens(directory, index=None, step=None, flatten=True):
+    parts, _, _ = get_parts(directory, index, step)
 
     doclens_filenames = [
         os.path.join(directory, f"doclens.{filename}.json") for filename in parts
