@@ -8,7 +8,14 @@ from config.config import logger
 
 
 class IndexPart:
-    def __init__(self, directory, dim=128, faiss_part_range=None, verbose=True):
+    def __init__(
+        self,
+        num_embeddings_dict,
+        directory,
+        dim=128,
+        faiss_part_range=None,
+        verbose=True,
+    ):
         first_part, last_part = (
             (0, None)
             if faiss_part_range is None
@@ -34,6 +41,7 @@ class IndexPart:
         self.parts_doclens = all_doclens[first_part:last_part]
         self.doclens = flatten(self.parts_doclens)
         self.num_embeddings = sum(self.doclens)
+        assert self.num_embeddings == num_embeddings_dict[str(faiss_part_range.start)]
 
         self.tensor = self._load_parts(dim, verbose)
         self.ranker = IndexRanker(self.tensor, self.doclens)
