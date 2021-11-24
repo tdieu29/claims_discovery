@@ -8,9 +8,11 @@ from config.config import logger
 
 
 class IndexPart:
-    def __init__(self, directory, dim=128, part_range=None, verbose=True):
+    def __init__(self, directory, dim=128, faiss_part_range=None, verbose=True):
         first_part, last_part = (
-            (0, None) if part_range is None else (part_range.start, part_range.stop)
+            (0, None)
+            if faiss_part_range is None
+            else (faiss_part_range.start, faiss_part_range.stop)
         )
 
         # Load parts metadata
