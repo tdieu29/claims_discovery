@@ -5,7 +5,6 @@ import torch
 from colbert.parameters import DEVICE
 from config.config import logger
 
-# BSIZE = 1 << 14  # 16384
 BSIZE = 5000
 
 
@@ -29,7 +28,13 @@ class IndexRanker:
         logger.info(f"#> Using strides {self.strides}...")
 
         self.views = self._create_views(self.tensor)
-        self.buffers = self._create_buffers(BSIZE, self.tensor.dtype, {"cpu", "cuda:0"})
+
+        if torch.cuda.is_available():
+            self.buffers = self._create_buffers(
+                BSIZE, self.tensor.dtype, {"cpu", "cuda:0"}
+            )
+        else:
+            self.buffers = self._create_buffers(BSIZE, self.tensor.dtype, {"cpu"})
 
     def _create_views(self, tensor):
         views = []
