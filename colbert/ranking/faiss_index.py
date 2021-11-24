@@ -9,7 +9,7 @@ from config.config import logger
 
 
 class FaissIndex:
-    def __init__(self, index_path, faiss_index_path, nprobe, part_range=None):
+    def __init__(self, index_path, faiss_index_path, nprobe):
         logger.info(f"#> Loading the FAISS index from {faiss_index_path} ...")
 
         faiss_part_range = os.path.basename(faiss_index_path).split(".")
@@ -20,39 +20,39 @@ class FaissIndex:
 
         if len(faiss_part_range) == 2:
             faiss_part_range = range(*map(int, faiss_part_range))
-            assert part_range[0] in faiss_part_range, (part_range, faiss_part_range)
-            assert part_range[-1] in faiss_part_range, (part_range, faiss_part_range)
 
-        self.part_range = part_range
         self.faiss_part_range = faiss_part_range
 
         self.faiss_index = faiss.read_index(faiss_index_path)
         self.faiss_index.nprobe = nprobe
 
-        logger.info("#> Building the emb2pid mapping...")
         all_doclens = load_doclens(index_path, flatten=False)
 
+        self.pids_range = None
         pid_offset = 0
         if faiss_part_range is not None:
             logger.info(f"#> Restricting all_doclens to the range {faiss_part_range}.")
+
             pid_offset = len(flatten(all_doclens[: faiss_part_range.start]))
+            pid_endpos = len(flatten(all_doclens[: faiss_part_range.stop]))
+            self.pids_range = range(pid_offset, pid_endpos)
+
             all_doclens = all_doclens[faiss_part_range.start : faiss_part_range.stop]
 
-        self.relative_range = None
-        if self.part_range is not None:
-            start = (
-                self.faiss_part_range.start if self.faiss_part_range is not None else 0
-            )
-            a = len(flatten(all_doclens[: self.part_range.start - start]))
-            b = len(flatten(all_doclens[: self.part_range.stop - start]))
-            self.relative_range = range(a, b)
-            logger.info(f"self.relative_range = {self.relative_range}")
-        if os.path.exists(os.path.join(index_path, "emb2pid", "emb2pid.pt")):
+        # Retrieve or build emb2pid mapping
+        fp = os.path.join(
+            index_path,
+            "emb2pid",
+            f"emb2pid_{faiss_part_range.start}-{faiss_part_range.stop}.pt",
+        )
+        if os.path.exists(fp):
             logger.info("#> Retrieving the emb2pid mapping...")
-            self.emb2pid = torch.load(os.path.join(index_path, "emb2pid", "emb2pid.pt"))
+            self.emb2pid = torch.load(fp)
         else:
             logger.info("#> Building the emb2pid mapping..")
-            os.makedirs(os.path.join(index_path, "emb2pid"), exist_ok=True)
+            dir_path = os.path.join(index_path, "emb2pid")
+            if not os.path.exists(dir_path):
+                os.makedirs(dir_path)
 
             all_doclens = flatten(all_doclens)
 
@@ -67,18 +67,20 @@ class FaissIndex:
                 offset_doclens += dlength
 
             # Save emb2pid mapping
-            torch.save(self.emb2pid, os.path.join(index_path, "emb2pid.pt"))
+            torch.save(self.emb2pid, fp)
 
-        logger.info(f"len(self.emb2pid) = {len(self.emb2pid)}")
+        logger.info(
+            f"len(self.emb2pid) (faiss range: {faiss_part_range.start}-{faiss_part_range.stop}) = {len(self.emb2pid)}"
+        )
 
     def retrieve(self, faiss_depth, Q, verbose=False):
         embedding_ids = self.queries_to_embedding_ids(faiss_depth, Q, verbose=verbose)
         pids = self.embedding_ids_to_pids(embedding_ids, verbose=verbose)
 
-        if self.relative_range is not None:
-            pids = [
-                [pid for pid in pids_ if pid in self.relative_range] for pids_ in pids
-            ]
+        if self.pids_range is not None:
+            for pids_ in pids:
+                for pid in pids_:
+                    assert pid in self.pids_range
 
         return pids
 
