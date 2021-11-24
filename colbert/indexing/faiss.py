@@ -1,13 +1,15 @@
+import json
 import math
 import os
 import queue
 import threading
+from collections import OrderedDict
 
 import torch
 
 from colbert.indexing.faiss_index import FaissIndex
 from colbert.indexing.index_manager import load_index_part
-from colbert.indexing.loaders import get_parts
+from colbert.indexing.loaders import get_parts, load_doclens
 from colbert.utils.utils import grouper
 from config.config import logger
 
@@ -72,8 +74,38 @@ def index_faiss(args):
 
     num_parts_per_slice = math.ceil(len(parts) / args.slices)
 
+    if not os.path.exists(os.path.join(args.index_path, "num_embeddings")):
+        os.makedirs(os.path.join(args.index_path, "num_embeddings"))
+
+    fp = os.path.join(args.index_path, "num_embeddings", "num_embeddings.json")
+
     for slice_idx, part_offset in enumerate(range(0, len(parts), num_parts_per_slice)):
         part_endpos = min(part_offset + num_parts_per_slice, len(parts))
+
+        # Load previously saved num_embeddings_dict
+        if os.path.exists(fp):
+            with open(fp) as file:
+                num_embeddings_dict = json.load(file)
+        else:
+            num_embeddings_dict = OrderedDict()
+
+        num_embeddings = sum(
+            load_doclens(args.index_path, index=part_offset, step=num_parts_per_slice)
+        )
+        num_embeddings_dict[part_offset] = num_embeddings
+
+        # Save num_embeddings_dict
+        with open(fp, "w") as f:
+            json.dump(num_embeddings_dict, f)
+
+        # Calculate partitions for this part
+        args.partitions = 1 << math.ceil(math.log2(8 * math.sqrt(num_embeddings)))
+        logger.info(
+            f"Part {part_offset}-{part_endpos}: ",
+            "default computation chooses",
+            args.partitions,
+            f"partitions (for {num_embeddings} embeddings)",
+        )
 
         slice_parts_paths = parts_paths[part_offset:part_endpos]
         slice_samples_paths = samples_paths[part_offset:part_endpos]
