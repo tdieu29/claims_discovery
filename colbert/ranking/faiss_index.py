@@ -127,12 +127,8 @@ class FaissIndex:
         logger.info(f"#> Converting to a list [shape = {all_pids.size()}]..")
         all_pids = all_pids.tolist()
 
-        logger.info("#> Removing duplicates (in parallel if large enough)..")
-
-        if len(all_pids) > 5000:
-            all_pids = list(self.parallel_pool.map(uniq, all_pids))
-        else:
-            all_pids = list(map(uniq, all_pids))
+        logger.info("#> Removing duplicates...")
+        all_pids = list(map(uniq, all_pids))
 
         logger.info("#> Done with embedding_ids_to_pids().")
 
