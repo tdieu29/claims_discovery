@@ -9,7 +9,7 @@ from config.config import logger
 
 
 class FaissIndex:
-    def __init__(self, index_path, faiss_index_path, nprobe):
+    def __init__(self, num_embeddings_dict, index_path, faiss_index_path, nprobe):
         logger.info(f"#> Loading the FAISS index from {faiss_index_path} ...")
 
         faiss_part_range = os.path.basename(faiss_index_path).split(".")
@@ -57,6 +57,9 @@ class FaissIndex:
             all_doclens = flatten(all_doclens)
 
             total_num_embeddings = sum(all_doclens)
+            assert (
+                total_num_embeddings == num_embeddings_dict[str(faiss_part_range.start)]
+            )
             self.emb2pid = torch.zeros(total_num_embeddings, dtype=torch.int)
 
             offset_doclens = 0
