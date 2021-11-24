@@ -41,6 +41,11 @@ class CollectionEncoder:
         self.cur = self.db.cursor()
 
         self.len_db = self.cur.execute("SELECT COUNT(*) FROM sections").fetchone()[0]
+        assert (
+            self.len_db
+            == self.cur.execute("SELECT MAX(Section_Id) FROM sections").fetchone()[0]
+            + 1
+        )
 
         self._load_model()
         self.indexmgr = IndexManager(args.dim)
