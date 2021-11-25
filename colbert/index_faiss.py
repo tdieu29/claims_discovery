@@ -2,7 +2,7 @@ import os
 import random
 
 from colbert.indexing.faiss import index_faiss
-from colbert.parameters import index_use_params
+from colbert.parameters import index_faiss_params
 from colbert.utils.parser import Arguments
 
 
@@ -14,7 +14,7 @@ def main():
     )
     parser.add_index_use_input()
 
-    params_list = index_use_params()
+    params_list = index_faiss_params()
     args = parser.parse(params_list)
 
     assert args.slices >= 1
