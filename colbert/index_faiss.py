@@ -4,6 +4,7 @@ import random
 
 from colbert.indexing.faiss import index_faiss
 from colbert.indexing.loaders import load_doclens
+from colbert.parameters import index_use_params
 from colbert.utils.parser import Arguments
 from config.config import logger
 
@@ -16,10 +17,9 @@ def main():
     )
     parser.add_index_use_input()
 
-    parser.add_argument("--sample", dest="sample", default=1.0, type=float)
-    parser.add_argument("--slices", dest="slices", default=1, type=int)
+    params_list = index_use_params()
+    args = parser.parse(params_list)
 
-    args = parser.parse()
     assert args.slices >= 1
     assert args.sample is None or (0.0 < args.sample <= 1.0), args.sample
 
