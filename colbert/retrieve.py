@@ -34,13 +34,14 @@ def retrieve_abstracts(query=None, colbert=None, checkpoint=None):
         args.queries = query
 
     args.index_path = os.path.join(args.index_root, args.index_name)
+    artifacts_dir = os.path.join(args.index_path, "artifacts")
 
     fp = os.path.join(args.index_path, "num_embeddings/num_embeddings.json")
     with open(fp) as file:
         args.num_embeddings = json.load(file)
 
     if args.faiss_name is not None:
-        args.faiss_index_path = os.path.join(args.index_path, args.faiss_name)
+        args.faiss_index_path = os.path.join(artifacts_dir, args.faiss_name)
         fname_components = os.path.basename(args.faiss_index_path).split(".")
         args.partitions = int(fname_components[1])
 
@@ -50,15 +51,15 @@ def retrieve_abstracts(query=None, colbert=None, checkpoint=None):
     else:
         step = math.ceil(args.num_faiss_indexes / args.slices)
         for count in range(args.num_faiss_indexes):
-            num_embeddings = sum(load_doclens(args.index_path, count, step))
+            num_embeddings = sum(load_doclens(artifacts_dir, count, step))
             args.partitions = 1 << math.ceil(math.log2(8 * math.sqrt(num_embeddings)))
 
             args.faiss_index_path = os.path.join(
-                args.index_path, get_faiss_index_name(args, count, count + step)
+                artifacts_dir, get_faiss_index_name(args, count, count + step)
             )
 
-        # Retrieve relevant abstracts
-        retrieve(args)
+            # Retrieve relevant abstracts
+            retrieve(args)
 
     # Copy all of the retrieved abstracts into one dictionary
     all_abstracts = OrderedDict()
