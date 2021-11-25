@@ -9,23 +9,23 @@ class Article:
     """
 
     # Article schema
-    ARTICLE = (
-        "article_id",
-        "source",
-        "title",
-        "abtract",
-        "published_date",
-        "authors",
-        "journal",
-        "url",
-        "entry_date",
-    )
+    # ARTICLE = (
+    #    "article_id",
+    #    "source",
+    #    "title",
+    #    "abtract",
+    #    "published_date",
+    #    "authors",
+    #    "journal",
+    #    "url",
+    #    "entry_date",
+    # )
 
     # Sections schema
-    SECTIONS = ("span_id", "text")
+    # SECTIONS = ("span_id", "text")
 
     # Sentences schema
-    SENTENCES = ("article_id", "sentence_id", "sentence")
+    # SENTENCES = ("article_id", "sentence_id", "sentence")
 
     def __init__(self, metadata, sections, sentences):
         """
@@ -49,3 +49,9 @@ class Article:
         """
 
         return self.metadata[0]
+
+    def entry_date(self):
+        """
+        Returns the entry date of the article.
+        """
+        return self.metadata[-1]
