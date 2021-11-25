@@ -1,3 +1,5 @@
+import os
+
 import torch
 
 from colbert.indexing.index_manager import load_index_part
@@ -11,7 +13,7 @@ class IndexPart:
     def __init__(
         self,
         num_embeddings_dict,
-        directory,
+        index_path,
         dim=128,
         faiss_part_range=None,
         verbose=True,
@@ -23,6 +25,7 @@ class IndexPart:
         )
 
         # Load parts metadata
+        directory = os.path.join(index_path, "artifacts")
         all_parts, all_parts_paths, _ = get_parts(directory)
         self.parts = all_parts[first_part:last_part]
         self.parts_paths = all_parts_paths[first_part:last_part]
