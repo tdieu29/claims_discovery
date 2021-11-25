@@ -6,13 +6,13 @@ from typing import OrderedDict
 
 from colbert.indexing.faiss import get_faiss_index_name
 from colbert.indexing.loaders import load_doclens
-from colbert.parameters import retrieval_params
+from colbert.parameters import retrieve_params
 from colbert.ranking.retrieval import retrieve
 from colbert.utils.parser import Arguments
 from colbert.utils.utils import load_colbert
 
 
-def retrieve_abstracts(query: str, colbert=None, checkpoint=None):
+def retrieve_abstracts(query=None, colbert=None, checkpoint=None):
     random.seed(12345)
 
     parser = Arguments(description="End-to-end retrieval and ranking with ColBERT.")
@@ -22,7 +22,7 @@ def retrieve_abstracts(query: str, colbert=None, checkpoint=None):
     parser.add_ranking_input()
     parser.add_retrieval_input()
 
-    params_list = retrieval_params
+    params_list = retrieve_params()
     args = parser.parse(params_list)
 
     if colbert is None and checkpoint is None:
@@ -30,7 +30,8 @@ def retrieve_abstracts(query: str, colbert=None, checkpoint=None):
     else:
         args.colbert, args.checkpoint = colbert, checkpoint
 
-    args.queries = query
+    if query is not None:
+        args.queries = query
 
     args.index_path = os.path.join(args.index_root, args.index_name)
 
@@ -45,6 +46,7 @@ def retrieve_abstracts(query: str, colbert=None, checkpoint=None):
 
         # Retrieve relevant abstracts
         retrieve(args)
+
     else:
         step = math.ceil(args.num_faiss_indexes / args.slices)
         for count in range(args.num_faiss_indexes):
