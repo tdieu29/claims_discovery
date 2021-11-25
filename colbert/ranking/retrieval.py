@@ -86,10 +86,14 @@ def retrieve(args):
             if not os.path.exists(dir_path):
                 os.makedirs(dir_path)
 
-            fp = os.path.join(
-                dir_path,
-                f"abstracts_retrieved_{faiss_part_range.start}-{faiss_part_range.stop}.json",
-            )
+            if faiss_part_range is not None:
+                fp = os.path.join(
+                    dir_path,
+                    f"abstracts_retrieved_{faiss_part_range.start}-{faiss_part_range.stop}.json",
+                )
+            else:
+                fp = os.path.join(dir_path, "abstracts_retrieved.json")
+
             with open(fp, "w") as f:
                 json.dump(retrieved_abstracts, f)
 
@@ -102,6 +106,10 @@ def retrieve(args):
                 f"top article ids: {top_article_ids}"
                 f"top scores: {top_scores}"
             )
-            logger.info(
-                f"Finished retrieving abstracts using faiss indexes {faiss_part_range.start} - {faiss_part_range.stop}"
-            )
+
+            if faiss_part_range is not None:
+                logger.info(
+                    f"Finished retrieving abstracts using faiss indexes {faiss_part_range.start} - {faiss_part_range.stop}.\n"
+                )
+            else:
+                logger.info("Finished retrieving abstracts.\n")
