@@ -1,5 +1,6 @@
+import json
+import os
 import sqlite3
-import time
 from collections import OrderedDict
 
 from colbert.modeling.inference import ModelInference
@@ -15,19 +16,16 @@ def retrieve(args):
     db = sqlite3.connect("cord19_data/database/articles.sqlite")
     cur = db.cursor()
 
-    milliseconds = 0
+    faiss_part_range = ranker.faiss_index.faiss_part_range
 
     queries = args.queries
     qids_in_order = list(queries.keys())
 
-    abstracts_retrieved = OrderedDict()
+    retrieved_abstracts = OrderedDict()
 
     for qoffset, qbatch in batch(qids_in_order, 100, provide_offset=True):
         for query_idx, qid in enumerate(qbatch):
             q_text = queries[qid]  # Query text
-
-            # torch.cuda.synchronize('cuda:0')
-            s = time.time()
 
             Q = ranker.encode([q_text])
             pids, scores = ranker.rank(Q)
@@ -48,7 +46,7 @@ def retrieve(args):
             # For each article id, find the passage id with the highest score
             final_results = OrderedDict()
             for article_id in all_results:
-                max_aid_score = -1000000  # Max score for this article id
+                max_aid_score = -100  # Max score for this article id
 
                 for pid in all_results[article_id]:
                     if all_results[article_id][pid] > max_aid_score:
@@ -65,30 +63,45 @@ def retrieve(args):
                 final_results.items(), key=lambda x: x[1][0], reverse=True
             )
 
-            # torch.cuda.synchronize()
-            milliseconds += (time.time() - s) * 1000.0
-
+            # Retrieve abstracts with highest scores
             if len(sorted_results):
 
-                highest_score = sorted_results[0][1][0]
-                top_article_id = sorted_results[0][0]
+                top_results = sorted_results[: args.num_retrieved_abstracts]
+                top_article_ids = [
+                    top_results[i][0] for i in range(args.num_retrieved_abstracts)
+                ]
+                top_scores = [
+                    top_results[i][1][0] for i in range(args.num_retrieved_abstracts)
+                ]
+                top_scores = [round(x, 2) for x in top_scores]
 
-                logger.info(
-                    f"query_idx: {qoffset+query_idx}"
-                    f"qid: {qid}"
-                    f"query: {q_text}"
-                    f"len(sorted_results): {len(sorted_results)}"
-                    f"top article id: {top_article_id}"
-                    f"highest score: {highest_score}"
-                    f"retrieval time per query: {milliseconds / (qoffset+query_idx+1)} ms"
-                )
+            # Save top results to file
+            for i in range(len(top_results)):
+                id = top_article_ids[i]
+                score = top_scores[i]
+                assert id not in retrieved_abstracts
+                retrieved_abstracts[id] = score
 
-                # Retrieve abstracts of the top 30 articles
-                top_30_articles = sorted_results[:30]
-                top_30_article_ids = [top_30_articles[i][0] for i in range(30)]
+            dir_path = os.path.join(args.index_path, "abstracts_retrieved")
+            if not os.path.exists(dir_path):
+                os.makedirs(dir_path)
 
-                # Record result
-                assert qid not in abstracts_retrieved
-                abstracts_retrieved[qid] = top_30_article_ids
+            fp = os.path.join(
+                dir_path,
+                f"abstracts_retrieved_{faiss_part_range.start}-{faiss_part_range.stop}.json",
+            )
+            with open(fp, "w") as f:
+                json.dump(retrieved_abstracts, f)
 
-    return abstracts_retrieved
+            # Log results
+            logger.info(
+                f"query_idx: {qoffset+query_idx}"
+                f"qid: {qid}"
+                f"query: {q_text}"
+                f"len(sorted_results): {len(sorted_results)}"
+                f"top article ids: {top_article_ids}"
+                f"top scores: {top_scores}"
+            )
+            logger.info(
+                f"Finished retrieving abstracts using faiss indexes {faiss_part_range.start} - {faiss_part_range.stop}"
+            )
