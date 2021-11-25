@@ -26,7 +26,8 @@ class FaissIndex:
         self.faiss_index = faiss.read_index(faiss_index_path)
         self.faiss_index.nprobe = nprobe
 
-        all_doclens = load_doclens(index_path, flatten=False)
+        artifacts_dir = os.path.join(index_path, "artifacts")
+        all_doclens = load_doclens(artifacts_dir, flatten=False)
 
         self.pids_range = None
         pid_offset = 0
