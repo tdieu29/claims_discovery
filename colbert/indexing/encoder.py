@@ -162,9 +162,13 @@ class CollectionEncoder:
     def _save_batch(self, batch_idx, embs, doclens):
         start_time = time.time()
 
-        output_path = os.path.join(self.args.index_path, f"{batch_idx}.pt")
-        output_sample_path = os.path.join(self.args.index_path, f"{batch_idx}.sample")
-        doclens_path = os.path.join(self.args.index_path, f"doclens.{batch_idx}.json")
+        output_path = os.path.join(self.args.index_path, "artifacts", f"{batch_idx}.pt")
+        output_sample_path = os.path.join(
+            self.args.index_path, "artifacts", f"{batch_idx}.sample"
+        )
+        doclens_path = os.path.join(
+            self.args.index_path, "artifacts", f"doclens.{batch_idx}.json"
+        )
 
         # Save the embeddings.
         self.indexmgr.save(embs, output_path)

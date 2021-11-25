@@ -63,7 +63,9 @@ SPAN = 3
 def index_faiss(args):
     logger.info("#> Starting..")
 
-    parts, parts_paths, samples_paths = get_parts(args.index_path)
+    parts, parts_paths, samples_paths = get_parts(
+        os.path.join(args.index_path, "artifacts")
+    )
 
     if args.sample is not None:
         assert args.sample, args.sample
@@ -90,7 +92,11 @@ def index_faiss(args):
             num_embeddings_dict = OrderedDict()
 
         num_embeddings = sum(
-            load_doclens(args.index_path, index=part_offset, step=num_parts_per_slice)
+            load_doclens(
+                os.path.join(args.index_path, "artifacts"),
+                index=part_offset,
+                step=num_parts_per_slice,
+            )
         )
         num_embeddings_dict[part_offset] = num_embeddings
 
@@ -117,7 +123,7 @@ def index_faiss(args):
                 args, offset=part_offset, endpos=part_endpos
             )
 
-        output_path = os.path.join(args.index_path, faiss_index_name)
+        output_path = os.path.join(args.index_path, "artifacts", faiss_index_name)
         logger.info(
             f"#> Processing slice #{slice_idx+1} of {args.slices} (range {part_offset}..{part_endpos})."
         )
