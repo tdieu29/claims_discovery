@@ -78,13 +78,6 @@ class Arguments:
     def add_ranking_input(self):
         self.add_argument("--queries", dest="queries", required=True)
 
-    # def add_reranking_input(self):
-    #    self.add_ranking_input()
-    #    self.add_argument("--topk", dest="topK", required=True)
-    #    self.add_argument(
-    #        "--shortcircuit", dest="shortcircuit", default=False, action="store_true"
-    #    )
-
     def add_indexing_input(self):
         self.add_argument(
             "--collection",
