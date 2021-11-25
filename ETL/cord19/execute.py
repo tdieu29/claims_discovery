@@ -103,8 +103,8 @@ class Execute:
 
                 count += 1
 
-        logger.debug(f"len(dates): {len(dates)}")  # 09/06: 653,530 | 10/18: 685791
-        logger.debug(f"count: {count}")  # 09/06: 751,943 | 10/16: 785,268
+        logger.info(f"len(dates): {len(dates)}")
+        logger.info(f"count: {count}")
         return dates
 
     @staticmethod
