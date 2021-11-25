@@ -3,3 +3,5 @@ venv
 .env
 stores
 logs
+ETL/cord19/test.py
+streamlit/test.py
