@@ -1,13 +1,18 @@
 import sqlite3
+import sys
 from argparse import Namespace
+from pathlib import Path
 
 import streamlit as st
-from colbert.retrieve import retrieve_abstracts
-from colbert.utils.utils import load_colbert
-from t5.label_prediction.inference import label_prediction
-from t5.label_prediction.model import LP_MonoT5
-from t5.sentence_selection.inference import rationale_selection
-from t5.sentence_selection.model import SS_MonoT5
+
+sys.path.insert(1, Path(__file__).parent.parent.absolute().__str__())
+
+from colbert.retrieve import retrieve_abstracts  # noqa: E402
+from colbert.utils.utils import load_colbert  # noqa: E402
+from t5.label_prediction.inference import label_prediction  # noqa: E402
+from t5.label_prediction.model import LP_MonoT5  # noqa: E402
+from t5.sentence_selection.inference import rationale_selection  # noqa: E402
+from t5.sentence_selection.model import SS_MonoT5  # noqa: E402
 
 st.set_page_config(
     page_title="Demo",
@@ -192,4 +197,4 @@ def close_connection(db):
 
 # Run main()
 if __name__ == "__main__":
-    main()
+    main(args)
