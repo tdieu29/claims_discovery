@@ -70,7 +70,6 @@ def load_ar_model(args):
 @st.cache
 def load_ss_model():
     ss_model = SS_MonoT5()
-    ss_model.post_init()
     return ss_model
 
 
@@ -78,7 +77,6 @@ def load_ss_model():
 @st.cache
 def load_lp_model():
     lp_model = LP_MonoT5()
-    lp_model.post_init()
     return lp_model
 
 
