@@ -1,4 +1,4 @@
 outs:
-- md5: ff9eb13b91b25128a6a2ed8651d94022
-  size: 66495
+- md5: 6db145834fadf6f23f48521967b0c339
+  size: 575
   path: num_embeddings.json

@@ -1,13 +1,18 @@
 import sqlite3
+import sys
 from argparse import Namespace
+from pathlib import Path
 
 import streamlit as st
-from colbert.retrieve import retrieve_abstracts
-from colbert.utils.utils import load_colbert
-from t5.label_prediction.inference import label_prediction
-from t5.label_prediction.model import LP_MonoT5
-from t5.sentence_selection.inference import rationale_selection
-from t5.sentence_selection.model import SS_MonoT5
+
+sys.path.insert(1, Path(__file__).parent.parent.absolute().__str__())
+
+from colbert.retrieve import retrieve_abstracts  # noqa: E402
+from colbert.utils.utils import load_colbert  # noqa: E402
+from t5.label_prediction.inference import label_prediction  # noqa: E402
+from t5.label_prediction.model import LP_MonoT5  # noqa: E402
+from t5.sentence_selection.inference import rationale_selection  # noqa: E402
+from t5.sentence_selection.model import SS_MonoT5  # noqa: E402
 
 st.set_page_config(
     page_title="Demo",
@@ -20,13 +25,20 @@ st.set_page_config(
     },
 )
 
-args = Namespace()
+args = Namespace(
+    query_maxlen=128,
+    doc_maxlen=512,
+    dim=128,
+    similarity="l2",
+    mask_punctuation=False,
+    checkpoint="colbert/model_checkpoint/biobert-MM-2970159.pt",
+)
 
 
 # Main function
 def main(args):
-    db, cur = start_connection("cord19_data/database/articles.sqlite")
-    ar_model, checkpoint = load_ar_model(args)
+    db = start_connection("cord19_data/database/articles.sqlite")
+    ar_model = load_ar_model(args)
     ss_model = load_ss_model()
     lp_model = load_lp_model()
 
@@ -36,36 +48,30 @@ def main(args):
     )
     query = st.text_input(label="Enter a query or a claim.")
 
-    rationales_selected, predicted_labels = search(
-        query, ar_model, checkpoint, ss_model, lp_model
-    )
+    rationales_selected, predicted_labels = search(query, ar_model, ss_model, lp_model)
     support, contradict, nei = categorize_results(predicted_labels)
-    display_selection(options, cur, support, contradict, nei, rationales_selected)
+    display_selection(options, db, support, contradict, nei, rationales_selected)
     close_connection(db)
-
-    return None
 
 
 # Connect to database
-@st.cache
+@st.cache(allow_output_mutation=True)
 def start_connection(databse_url):
     db = sqlite3.connect(databse_url)
-    cur = db.cursor()
-    return db, cur
+    return db
 
 
 # Load abstract retrieval model
 @st.cache
 def load_ar_model(args):
-    ar_model, checkpoint = load_colbert(args, do_print=False)
-    return ar_model, checkpoint
+    ar_model = load_colbert(args, do_log=True)
+    return ar_model
 
 
 # Load sentence selection model
 @st.cache
 def load_ss_model():
     ss_model = SS_MonoT5()
-    ss_model.post_init()
     return ss_model
 
 
@@ -73,13 +79,12 @@ def load_ss_model():
 @st.cache
 def load_lp_model():
     lp_model = LP_MonoT5()
-    lp_model.post_init()
     return lp_model
 
 
 #
 @st.cache
-def search(query, ar_model, checkpoint, ss_model, lp_model):
+def search(query, ar_model, ss_model, lp_model):
 
     # Query input
     query_dict = {}
@@ -89,7 +94,7 @@ def search(query, ar_model, checkpoint, ss_model, lp_model):
     if st.button("Search"):
         with st.spinner("Searching..."):
 
-            abstracts_retrieved = retrieve_abstracts(query_dict, ar_model, checkpoint)
+            abstracts_retrieved = retrieve_abstracts(query_dict, ar_model)
 
             rationales_selected = rationale_selection(
                 query, abstracts_retrieved, ss_model
@@ -117,7 +122,8 @@ def categorize_results(predicted_labels):
 
 
 #
-def display_selection(options, cur, support, contradict, nei, rationales_selected):
+def display_selection(options, db, support, contradict, nei, rationales_selected):
+    cur = db.cursor()
     if options == "Supporting":
         display_results(cur, support, rationales_selected)
     elif options == "Contradicting":
@@ -129,7 +135,8 @@ def display_selection(options, cur, support, contradict, nei, rationales_selecte
 
 # Retrieve information about an article when provided with the abstract id
 @st.cache
-def retrieve_info(cur, id):
+def retrieve_info(db, id):
+    cur = db.cursor()
 
     abstract = cur.execute(
         "SELECT Abstract FROM articles WHERE Article_Id = (?)", (id,)
@@ -153,7 +160,9 @@ def retrieve_info(cur, id):
     return abstract, title, published_date, authors, journal, url
 
 
-def display_results(cur, result_list, rationales_selected):
+def display_results(db, result_list, rationales_selected):
+    cur = db.cursor()
+
     for i, abstract_id in enumerate(result_list):
         abstract, title, published_date, authors, journal, url = retrieve_info(
             cur, abstract_id
@@ -189,4 +198,4 @@ def close_connection(db):
 
 # Run main()
 if __name__ == "__main__":
-    main()
+    main(args)

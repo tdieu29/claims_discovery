@@ -16,30 +16,13 @@ from t5.tokenize import QueryDocumentBatch, T5BatchTokenizer
 class LP_MonoT5:
     def __init__(
         self,
-        pretrained_model_name_or_path="",
+        pretrained_model_name_or_path="t5/checkpoints/label_prediction",
         use_amp=False,
-        # token_false = '▁false',
-        # token_true = '▁true',
-        # token_weak = '▁weak'
+        token_false="▁false",
+        token_true="▁true",
+        token_weak="▁weak",
     ):
-
-        # self.model = self.get_model(pretrained_model_name_or_path)
-        self.model = None
-        # self.tokenizer = self.get_tokenizer()
-        self.tokenizer = None
-        # self.token_false_id, self.token_true_id, self.token_weak_id = self.get_prediction_tokens(self.tokenizer,
-        #                                                                                        token_false,
-        #                                                                                        token_true,
-        #                                                                                        token_weak)
-        self.token_false_id, self.token_true_id, self.token_weak_id = None, None, None
-
-        self.pretrained_model_name_or_path = pretrained_model_name_or_path
-        # self.device = next(self.model.parameters(), None).device
-        self.device = None
-        self.use_amp = use_amp
-
-    def post_init(self, token_false="▁false", token_true="▁true", token_weak="▁weak"):
-        self.model = self.get_model(self.pretrained_model_name_or_path)
+        self.model = self.get_model(pretrained_model_name_or_path)
         self.tokenizer = self.get_tokenizer()
         (
             self.token_false_id,
@@ -49,7 +32,7 @@ class LP_MonoT5:
             self.tokenizer, token_false, token_true, token_weak
         )
         self.device = next(self.model.parameters(), None).device
-        return None
+        self.use_amp = use_amp
 
     @staticmethod
     def get_model(

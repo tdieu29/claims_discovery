@@ -58,7 +58,7 @@ def load_colbert(args, do_log=True):
 
     colbert.eval()
 
-    return colbert, checkpoint
+    return colbert
 
 
 def create_directory(path):
