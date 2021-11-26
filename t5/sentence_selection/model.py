@@ -16,33 +16,18 @@ from t5.tokenize import QueryDocumentBatch, T5BatchTokenizer
 class SS_MonoT5:
     def __init__(
         self,
-        pretrained_model_name_or_path="",
+        pretrained_model_name_or_path="t5/checkpoints/sentence_selection",
         use_amp=False,
-        # token_false = '▁false',
-        # token_true = '▁true'
+        token_false="▁false",
+        token_true="▁true",
     ):
-        # self.model = self.get_model(pretrained_model_name_or_path)
-        # self.tokenizer = self.get_tokenizer()
-        # self.token_false_id, self.token_true_id = self.get_prediction_tokens(self.tokenizer,
-        #                                                                     token_false,
-        #                                                                     token_true)
-        self.model = None
-        self.tokenizer = None
-        self.token_false_id, self.token_true_id = None
-        self.device = None
-
-        self.pretrained_model_name_or_path = pretrained_model_name_or_path
-        # self.device = next(self.model.parameters(), None).device
-        self.use_amp = use_amp
-
-    def post_init(self, token_false="▁false", token_true="▁true"):
-        self.model = self.get_model(self.pretrained_model_name_or_path)
+        self.model = self.get_model(pretrained_model_name_or_path)
         self.tokenizer = self.get_tokenizer()
         self.token_false_id, self.token_true_id = self.get_prediction_tokens(
             self.tokenizer, token_false, token_true
         )
         self.device = next(self.model.parameters(), None).device
-        return None
+        self.use_amp = use_amp
 
     @staticmethod
     def get_model(
