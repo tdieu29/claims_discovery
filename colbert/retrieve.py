@@ -12,7 +12,7 @@ from colbert.utils.parser import Arguments
 from colbert.utils.utils import load_colbert
 
 
-def retrieve_abstracts(query=None, colbert=None, checkpoint=None):
+def retrieve_abstracts(query=None, colbert=None):
     random.seed(12345)
 
     parser = Arguments(description="End-to-end retrieval and ranking with ColBERT.")
@@ -25,10 +25,10 @@ def retrieve_abstracts(query=None, colbert=None, checkpoint=None):
     params_list = retrieve_params()
     args = parser.parse(params_list)
 
-    if colbert is None and checkpoint is None:
-        args.colbert, args.checkpoint = load_colbert(args)
+    if colbert is None:
+        args.colbert = load_colbert(args)
     else:
-        args.colbert, args.checkpoint = colbert, checkpoint
+        args.colbert = colbert
 
     if query is not None:
         args.queries = query
