@@ -20,7 +20,14 @@ st.set_page_config(
     },
 )
 
-args = Namespace()
+args = Namespace(
+    query_maxlen=128,
+    doc_maxlen=512,
+    dim=128,
+    similarity="l2",
+    mask_punctuation=False,
+    checkpoint="colbert/model_checkpoint/biobert-MM-2970159.pt",
+)
 
 
 # Main function
@@ -43,8 +50,6 @@ def main(args):
     display_selection(options, cur, support, contradict, nei, rationales_selected)
     close_connection(db)
 
-    return None
-
 
 # Connect to database
 @st.cache
@@ -57,7 +62,7 @@ def start_connection(databse_url):
 # Load abstract retrieval model
 @st.cache
 def load_ar_model(args):
-    ar_model, checkpoint = load_colbert(args, do_print=False)
+    ar_model, checkpoint = load_colbert(args, do_log=True)
     return ar_model, checkpoint
 
 
