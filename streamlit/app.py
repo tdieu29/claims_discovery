@@ -37,7 +37,8 @@ args = Namespace(
 
 # Main function
 def main(args):
-    db, cur = start_connection("cord19_data/database/articles.sqlite")
+    db = start_connection("cord19_data/database/articles.sqlite")
+    cur = db.cursor()
     ar_model, checkpoint = load_ar_model(args)
     ss_model = load_ss_model()
     lp_model = load_lp_model()
@@ -57,11 +58,10 @@ def main(args):
 
 
 # Connect to database
-@st.cache
+@st.cache(allow_output_mutation=True)
 def start_connection(databse_url):
     db = sqlite3.connect(databse_url)
-    cur = db.cursor()
-    return db, cur
+    return db
 
 
 # Load abstract retrieval model
