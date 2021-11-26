@@ -39,7 +39,7 @@ args = Namespace(
 def main(args):
     db = start_connection("cord19_data/database/articles.sqlite")
     cur = db.cursor()
-    ar_model, checkpoint = load_ar_model(args)
+    ar_model = load_ar_model(args)
     ss_model = load_ss_model()
     lp_model = load_lp_model()
 
@@ -49,9 +49,7 @@ def main(args):
     )
     query = st.text_input(label="Enter a query or a claim.")
 
-    rationales_selected, predicted_labels = search(
-        query, ar_model, checkpoint, ss_model, lp_model
-    )
+    rationales_selected, predicted_labels = search(query, ar_model, ss_model, lp_model)
     support, contradict, nei = categorize_results(predicted_labels)
     display_selection(options, cur, support, contradict, nei, rationales_selected)
     close_connection(db)
@@ -67,8 +65,8 @@ def start_connection(databse_url):
 # Load abstract retrieval model
 @st.cache
 def load_ar_model(args):
-    ar_model, checkpoint = load_colbert(args, do_log=True)
-    return ar_model, checkpoint
+    ar_model = load_colbert(args, do_log=True)
+    return ar_model
 
 
 # Load sentence selection model
@@ -87,7 +85,7 @@ def load_lp_model():
 
 #
 @st.cache
-def search(query, ar_model, checkpoint, ss_model, lp_model):
+def search(query, ar_model, ss_model, lp_model):
 
     # Query input
     query_dict = {}
@@ -97,7 +95,7 @@ def search(query, ar_model, checkpoint, ss_model, lp_model):
     if st.button("Search"):
         with st.spinner("Searching..."):
 
-            abstracts_retrieved = retrieve_abstracts(query_dict, ar_model, checkpoint)
+            abstracts_retrieved = retrieve_abstracts(query_dict, ar_model)
 
             rationales_selected = rationale_selection(
                 query, abstracts_retrieved, ss_model
