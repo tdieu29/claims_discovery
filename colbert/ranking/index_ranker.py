@@ -3,9 +3,9 @@ from itertools import accumulate
 import torch
 
 from colbert.parameters import DEVICE
-from colbert.utils.utils import print_message
+from config.config import logger
 
-BSIZE = 1 << 14  # BSIZE = 16384
+BSIZE = 5000
 
 
 class IndexRanker:
@@ -25,10 +25,16 @@ class IndexRanker:
         self.strides.append(self.doclens.max().item())
         self.strides = sorted(list(set(self.strides)))
 
-        print_message(f"#> Using strides {self.strides}..")
+        logger.info(f"#> Using strides {self.strides}...")
 
         self.views = self._create_views(self.tensor)
-        self.buffers = self._create_buffers(BSIZE, self.tensor.dtype, {"cpu", "cuda:0"})
+
+        if torch.cuda.is_available():
+            self.buffers = self._create_buffers(
+                BSIZE, self.tensor.dtype, {"cpu", "cuda:0"}
+            )
+        else:
+            self.buffers = self._create_buffers(BSIZE, self.tensor.dtype, {"cpu"})
 
     def _create_views(self, tensor):
         views = []

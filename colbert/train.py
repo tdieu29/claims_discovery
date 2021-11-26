@@ -1,5 +1,6 @@
 import wandb
 
+from colbert.parameters import train_params
 from colbert.training.training import train
 from colbert.utils.parser import Arguments
 
@@ -11,7 +12,8 @@ def main():
     parser.add_model_training_parameters()
     parser.add_training_input()
 
-    args = parser.parse()
+    params_list = train_params()
+    args = parser.parse(params_list)
 
     assert args.bsize % args.accumsteps == 0, (
         (args.bsize, args.accumsteps),

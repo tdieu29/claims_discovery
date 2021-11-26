@@ -13,17 +13,15 @@ class Ranker:
 
         if faiss_depth is not None:
             self.faiss_index = FaissIndex(
-                args.index_path,
-                args.faiss_index_path,
-                args.nprobe,
-                part_range=args.part_range,
+                args.num_embeddings, args.index_path, args.faiss_index_path, args.nprobe
             )
             self.retrieve = partial(self.faiss_index.retrieve, self.faiss_depth)
 
         self.index = IndexPart(
+            args.num_embeddings,
             args.index_path,
-            dim=inference.colbert.dim,
-            part_range=args.part_range,
+            inference.colbert.dim,
+            self.faiss_index.faiss_part_range,
             verbose=True,
         )
 

@@ -7,12 +7,12 @@ import hashlib
 import os.path
 from multiprocessing import Pool
 
+from config.config import logger
+
 from ..article import Article
 from ..sqlite import SQLite
 from .section import Section
 from .sentence import Sentence
-
-# from dateutil import parser
 
 
 class Execute:
@@ -39,32 +39,6 @@ class Execute:
             sha = hashlib.sha1(row["title"].encode("utf-8")).hexdigest()
 
         return sha
-
-    @staticmethod
-    def getDate(row):
-        """
-        Parses the publish date from the input row
-
-        Args:
-            row ([type]): input row
-
-        Returns:
-            publish date
-        """
-        date = row["publish_time"]
-
-        return date
-        # if date:
-        # try:
-        # if date.isdigit() and len(date) == 4:
-        # Default entries with just year to Jan 1
-        # date += "-01-01"
-        # return parser.parse(date)
-
-        # except:
-        # return None
-
-        # return None
 
     @staticmethod
     def getUrl(row):
@@ -129,8 +103,8 @@ class Execute:
 
                 count += 1
 
-        print("len(dates): ", len(dates))  # 09/06: 653,530 | 10/18: 685791
-        print("count: ", count)  # 09/06: 751,943 | 10/16: 785,268
+        logger.info(f"len(dates): {len(dates)}")
+        logger.info(f"count: {count}")
         return dates
 
     @staticmethod
@@ -185,9 +159,6 @@ class Execute:
             article
         """
 
-        # Published date
-        p_date = Execute.getDate(row)
-
         # Get text spans in each document (title + abstract)
         sections = Section.parse(row)
         if sections == []:
@@ -202,7 +173,7 @@ class Execute:
             row["source_x"],
             row["title"],
             row["abstract"],
-            p_date,
+            row["publish_time"],
             row["authors"],
             row["journal"],
             Execute.getUrl(row),
@@ -222,7 +193,7 @@ class Execute:
             merge_url ([type]): database url to use for merging prior results
         """
 
-        print(f"Building articles database from {indir}")
+        logger.info(f"Building articles database from {indir}")
 
         # Create database
         db = SQLite(outdir)  # outdir = cord19_data/database
@@ -233,8 +204,10 @@ class Execute:
         # Merge existing db, if present
         if merge_url:
             merge_uids = db.merge(merge_url, dates)
-            print("len(merge_uids): ", len(merge_uids))  # DELETE LATER
-            print("Merged results from existing articles database")
+            logger.info(
+                "Merged results from existing articles database. "
+                f"len(merge_uids): {len(merge_uids)}"
+            )
         else:
             merge_uids = None
 

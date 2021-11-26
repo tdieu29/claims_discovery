@@ -1,0 +1,4 @@
+outs:
+- md5: 5ddf9d01430942380b8c66cfc68defe4
+  size: 66985
+  path: scifact_lp_train.txt

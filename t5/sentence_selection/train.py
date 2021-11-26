@@ -10,6 +10,8 @@ from transformers import (
     Seq2SeqTrainingArguments,
 )
 
+from t5.parameters import ss_params
+
 
 class MonoT5Dataset(Dataset):
     def __init__(self, data):
@@ -37,17 +39,11 @@ def load_train_data(triples_path):
         random.shuffle(train_samples)
 
     random.shuffle(train_samples)
-    print("len(train_samples): ", len(train_samples))
 
     return train_samples
 
 
 def main():
-    # args = Namespace(
-    #  triples_path = ['/content/drive/MyDrive/NLP_Final_Project/Sentence_Selection/scifact_ss_train.txt',
-    #                  '/content/drive/MyDrive/NLP_Final_Project/Sentence_Selection/bio_claim_ss_train.txt',
-    #                  '/content/drive/MyDrive/NLP_Final_Project/Sentence_Selection/bio_query_ss_train.txt'],
-    #  output_model_path = '/content/drive/MyDrive/NLP_Final_Project/Sentence_Selection/3e-4_4epochs')
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -59,18 +55,12 @@ def main():
     )
     parser.add_argument(
         "--triples_path",
-        default=[
-            "/content/drive/MyDrive/NLP_Final_Project/Sentence_Selection/scifact_ss_train.txt",
-            "/content/drive/MyDrive/NLP_Final_Project/Sentence_Selection/bio_claim_ss_train.txt",
-            "/content/drive/MyDrive/NLP_Final_Project/Sentence_Selection/bio_query_ss_train.txt",
-        ],
         type=str,
         required=True,
         help="Triples file paths",
     )
     parser.add_argument(
         "--output_model_path",
-        default="/content/drive/MyDrive/NLP_Final_Project/Sentence_Selection/3e-4_4epochs",
         type=str,
         required=True,
         help="Path for trained model and checkpoints.",
@@ -113,7 +103,8 @@ def main():
 
     device = torch.device("cuda")
     torch.manual_seed(1234)
-    args = parser.parse_args()
+    params_list = ss_params()
+    args = parser.parse_args(params_list)
 
     model = AutoModelForSeq2SeqLM.from_pretrained(args.base_model)
     tokenizer = AutoTokenizer.from_pretrained("t5-base")

@@ -6,6 +6,8 @@ import os
 import sqlite3
 from datetime import datetime, timedelta
 
+from config.config import logger
+
 
 class SQLite:
     """
@@ -117,8 +119,8 @@ class SQLite:
         try:
             self.cur.execute(create)
         except Exception as e:
-            print(create)
-            print("Failed to create table: " + e)
+            logger.error(create)
+            logger.error(f"Failed to create table: {e}")
 
     def insert(self, table, name, row):
         """
@@ -140,7 +142,7 @@ class SQLite:
             # Execute insert statement
             self.cur.execute(insert, self.values(table, row, columns))
         except Exception as ex:
-            print(f"Error inserting row: {row}", ex)
+            logger.error(f"Error inserting row: {row}\n" f"Error: {ex}")
 
     def values(self, table, row, columns):
         """
@@ -178,8 +180,8 @@ class SQLite:
 
         # Increment number of articles processed
         self.aindex += 1
-        if self.aindex % 1000 == 0:
-            print(f"Inserted {self.aindex} articles", end="\r")
+        if self.aindex % 10000 == 0:
+            logger.info(f"Inserted {self.aindex} articles")
 
             # Commit current transaction and start a new one
             self.transaction()
@@ -264,7 +266,7 @@ class SQLite:
         self.cur.execute("BEGIN")
 
     def complete(self):
-        print(f"Total articles inserted: {self.aindex}")
+        logger.info(f"Total articles inserted: {self.aindex}")
 
         # Create articles index for spans table
         self.cur.execute(SQLite.CREATE_INDEX)

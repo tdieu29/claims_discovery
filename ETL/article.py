@@ -8,25 +8,6 @@ class Article:
     Article object. Holds metadata, abstract and title of that article.
     """
 
-    # Article schema
-    ARTICLE = (
-        "article_id",
-        "source",
-        "title",
-        "abtract",
-        "published_date",
-        "authors",
-        "journal",
-        "url",
-        "entry_date",
-    )
-
-    # Sections schema
-    SECTIONS = ("span_id", "text")
-
-    # Sentences schema
-    SENTENCES = ("article_id", "sentence_id", "sentence")
-
     def __init__(self, metadata, sections, sentences):
         """
         Stores article metadata and content as an object.
@@ -49,3 +30,9 @@ class Article:
         """
 
         return self.metadata[0]
+
+    def entry_date(self):
+        """
+        Returns the entry date of the article.
+        """
+        return self.metadata[-1]

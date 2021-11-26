@@ -1,0 +1,4 @@
+outs:
+- md5: c749cbd57d03ebe4274761011140ab03
+  size: 66985
+  path: bio_query_ss_train.txt

@@ -9,7 +9,7 @@ from t5.base import Query, Text
 
 def rationale_selection(query, abstracts_retrieved, SS_MonoT5_model):
 
-    top_50_article_ids = list(abstracts_retrieved.values())[0]
+    top_50_article_ids = list(abstracts_retrieved.keys())[0]
 
     # Retrieve abstracts and create inputs for the Sentence Selection model
     db = sqlite3.connect("cord19_data/database/articles.sqlite")

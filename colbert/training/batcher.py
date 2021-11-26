@@ -6,7 +6,7 @@ from functools import partial
 from colbert.modeling.doc_tokenization import DocTokenizer
 from colbert.modeling.query_tokenization import QueryTokenizer
 from colbert.modeling.utils import tensorize_triples
-from colbert.utils.utils import print_message
+from config.config import logger
 
 
 class Batcher:
@@ -36,7 +36,7 @@ class Batcher:
     def _load_triples(self, path, name):
         random.seed(12345)
 
-        print_message(f"#> Loading {name} triples...")
+        logger.info(f"#> Loading {name} triples...")
 
         triples = []
 
@@ -61,7 +61,7 @@ class Batcher:
         return shuffled_triples
 
     def _load_queries(self, path, name):
-        print_message(f"#> Loading {name} queries...")
+        logger.info(f"#> Loading {name} queries...")
 
         with open(path, "rb") as f:
             queries = pickle.load(f)
@@ -69,7 +69,7 @@ class Batcher:
         return queries
 
     def _load_collection(self, path, name):
-        print_message(f"#> Loading {name} collection...")
+        logger.info(f"#> Loading {name} collection...")
 
         with open(path, "rb") as f:
             collection = pickle.load(f)
@@ -152,10 +152,10 @@ class Batcher:
         switch_to_bioS,
         count,
     ):
-        print(
+        logger.info(
             f"Skipping to batch #{batch_idx} (with intended_batch_size = {intended_batch_size}) for training."
+            f"position_nf: {position_nf} | position_bioS: {position_bioS}"
         )
-        print(f"position_nf: {position_nf} | position_bioS: {position_bioS}")
 
         self.position_bioS = position_bioS
         self.position_nf = position_nf

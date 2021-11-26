@@ -1,18 +1,31 @@
+import os
+
 import torch
 
 from colbert.indexing.index_manager import load_index_part
 from colbert.indexing.loaders import get_parts, load_doclens
 from colbert.ranking.index_ranker import IndexRanker
-from colbert.utils.utils import flatten, print_message
+from colbert.utils.utils import flatten
+from config.config import logger
 
 
 class IndexPart:
-    def __init__(self, directory, dim=128, part_range=None, verbose=True):
+    def __init__(
+        self,
+        num_embeddings_dict,
+        index_path,
+        dim=128,
+        faiss_part_range=None,
+        verbose=True,
+    ):
         first_part, last_part = (
-            (0, None) if part_range is None else (part_range.start, part_range.stop)
+            (0, None)
+            if faiss_part_range is None
+            else (faiss_part_range.start, faiss_part_range.stop)
         )
 
         # Load parts metadata
+        directory = os.path.join(index_path, "artifacts")
         all_parts, all_parts_paths, _ = get_parts(directory)
         self.parts = all_parts[first_part:last_part]
         self.parts_paths = all_parts_paths[first_part:last_part]
@@ -31,6 +44,7 @@ class IndexPart:
         self.parts_doclens = all_doclens[first_part:last_part]
         self.doclens = flatten(self.parts_doclens)
         self.num_embeddings = sum(self.doclens)
+        assert self.num_embeddings == num_embeddings_dict[str(faiss_part_range.start)]
 
         self.tensor = self._load_parts(dim, verbose)
         self.ranker = IndexRanker(self.tensor, self.doclens)
@@ -49,11 +63,11 @@ class IndexPart:
         tensor = torch.zeros(self.num_embeddings + 512, dim, dtype=torch.float16)
 
         if verbose:
-            print_message("tensor.size() = ", tensor.size())
+            logger.info(f"tensor.size() = {tensor.size()}")
 
         offset = 0
         for idx, filename in enumerate(self.parts_paths):
-            print_message("|> Loading", filename, "...", condition=verbose)
+            logger.info(f"|> Loading {filename} ...")
 
             endpos = offset + sum(self.parts_doclens[idx])
             part = load_index_part(filename, verbose=verbose)

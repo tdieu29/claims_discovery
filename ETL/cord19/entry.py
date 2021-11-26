@@ -13,6 +13,8 @@ from urllib.request import urlretrieve
 import pandas as pd
 import requests
 
+from config.config import logger
+
 from .execute import Execute
 
 # Define remote URL and temporary directory
@@ -64,7 +66,7 @@ class Entry:
             if current.day == 1 or date == dates[-1]:
                 url = f"{URL}/{date}/metadata.csv"
                 path = os.path.join(DIRECTORY, "%s.csv" % date)
-                print(f"Retrieving {url} to {path}")
+                logger.info(f"Retrieving {url} to {path}")
 
                 # Only pull  file if it's not already cached
                 if not os.path.exists(path):
