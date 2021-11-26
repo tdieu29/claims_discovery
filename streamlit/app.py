@@ -38,7 +38,6 @@ args = Namespace(
 # Main function
 def main(args):
     db = start_connection("cord19_data/database/articles.sqlite")
-    cur = db.cursor()
     ar_model = load_ar_model(args)
     ss_model = load_ss_model()
     lp_model = load_lp_model()
@@ -51,7 +50,7 @@ def main(args):
 
     rationales_selected, predicted_labels = search(query, ar_model, ss_model, lp_model)
     support, contradict, nei = categorize_results(predicted_labels)
-    display_selection(options, cur, support, contradict, nei, rationales_selected)
+    display_selection(options, db, support, contradict, nei, rationales_selected)
     close_connection(db)
 
 
@@ -123,7 +122,8 @@ def categorize_results(predicted_labels):
 
 
 #
-def display_selection(options, cur, support, contradict, nei, rationales_selected):
+def display_selection(options, db, support, contradict, nei, rationales_selected):
+    cur = db.cursor()
     if options == "Supporting":
         display_results(cur, support, rationales_selected)
     elif options == "Contradicting":
@@ -135,7 +135,8 @@ def display_selection(options, cur, support, contradict, nei, rationales_selecte
 
 # Retrieve information about an article when provided with the abstract id
 @st.cache
-def retrieve_info(cur, id):
+def retrieve_info(db, id):
+    cur = db.cursor()
 
     abstract = cur.execute(
         "SELECT Abstract FROM articles WHERE Article_Id = (?)", (id,)
@@ -159,7 +160,9 @@ def retrieve_info(cur, id):
     return abstract, title, published_date, authors, journal, url
 
 
-def display_results(cur, result_list, rationales_selected):
+def display_results(db, result_list, rationales_selected):
+    cur = db.cursor()
+
     for i, abstract_id in enumerate(result_list):
         abstract, title, published_date, authors, journal, url = retrieve_info(
             cur, abstract_id
