@@ -48,6 +48,8 @@ def main(args):
     )
     query = st.text_input(label="Enter a query or a claim.")
 
+    # Add query to database
+
     rationales_selected, predicted_labels = search(query, ar_model, ss_model, lp_model)
     support, contradict, nei = categorize_results(predicted_labels)
     display_selection(options, db, support, contradict, nei, rationales_selected)
@@ -82,7 +84,8 @@ def load_lp_model():
     return lp_model
 
 
-#
+# Search database for relevant abstracts and rationale sentences in abstracts
+# and predict labels
 @st.cache
 def search(query, ar_model, ss_model, lp_model):
 
@@ -105,7 +108,7 @@ def search(query, ar_model, ss_model, lp_model):
     return rationales_selected, predicted_labels
 
 
-#
+# Categorize results into 3 lists: support, contradict, and NEI (not enough information)
 def categorize_results(predicted_labels):
     support, contradict, nei = [], [], []
 
@@ -121,7 +124,7 @@ def categorize_results(predicted_labels):
     return support, contradict, nei
 
 
-#
+# Display results based on the display option selected by users
 def display_selection(options, db, support, contradict, nei, rationales_selected):
     cur = db.cursor()
     if options == "Supporting":
