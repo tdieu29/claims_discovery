@@ -76,7 +76,7 @@ class Arguments:
         self.checks.append(check_training_input)
 
     def add_ranking_input(self):
-        self.add_argument("--queries", dest="queries", required=True)
+        self.add_argument("--queries", dest="queries")
 
     def add_indexing_input(self):
         self.add_argument(
