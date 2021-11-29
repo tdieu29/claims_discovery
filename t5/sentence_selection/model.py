@@ -16,7 +16,7 @@ from t5.tokenize import QueryDocumentBatch, T5BatchTokenizer
 class SS_MonoT5:
     def __init__(
         self,
-        pretrained_model_name_or_path="t5/checkpoints/sentence_selection",
+        pretrained_model_name_or_path="t5/checkpoints/sentence_selection/checkpoint-15400",
         use_amp=False,
         token_false="▁false",
         token_true="▁true",
