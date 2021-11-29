@@ -99,14 +99,13 @@ class Arguments:
         self.add_argument("--index_name", dest="index_name", required=True)
         self.add_argument("--partitions", dest="partitions", default=None, type=int)
         self.add_argument("--sample", dest="sample", default=0.3, type=float)
-        self.add_argument("--slices", dest="slices", default=1, type=int)
+        self.add_argument("--slices", dest="slices", type=int)
 
     def add_retrieval_input(self):
         self.add_index_use_input()
         self.add_argument("--nprobe", dest="nprobe", default=64, type=int)
         self.add_argument("--faiss_name", dest="faiss_name", default=None, type=str)
         self.add_argument("--faiss_depth", dest="faiss_depth", default=1024, type=int)
-        self.add_argument("--slices", dest="slices", type=int)
         self.add_argument("--num_faiss_indexes", dest="num_faiss_indexes", type=int)
         self.add_argument(
             "--num_retrieved_abstracts",
