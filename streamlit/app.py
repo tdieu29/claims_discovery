@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import OrderedDict
 
 import streamlit as st
+from config.config import logger
 
 sys.path.insert(1, Path(__file__).parent.parent.absolute().__str__())
 
@@ -38,26 +39,38 @@ args = Namespace(
 
 # Main function
 def main(args):
+
     db = start_connection("cord19_data/database/articles.sqlite")
-    ar_model = load_ar_model(args)
-    ss_model = load_ss_model()
-    lp_model = load_lp_model()
+
+    with st.spinner("Loading models..."):
+        ar_model = load_ar_model(args)  # Abstract retrieval model
+        ss_model = load_ss_model()  # Sentence selection model
+        lp_model = load_lp_model()  # Label prediction model
 
     options = st.sidebar.radio(
-        "Type of resulting articles to display",
-        ["Supporting", "Contradicting", "Relevant"],
+        "Type of articles to display",
+        ["Supporting articles", "Contradicting articles", "Other relevant articles"],
     )
+
     query = st.text_input(label="Enter a query or a claim.")
 
-    if query is not None:
+    if query:
+
+        # Prepare arguments for search() function
+        search_args = Namespace(
+            query=query, ar_model=ar_model, ss_model=ss_model, lp_model=lp_model
+        )
+
         with st.spinner("Searching..."):
-            rationales_selected, predicted_labels = search(
-                query, ar_model, ss_model, lp_model
-            )
+            rationales_selected, predicted_labels = search(search_args)
+
+        logger.info(f"len(rationale_selected): {len(rationales_selected)}")
+        logger.info(f"len(predicted_labels): {len(predicted_labels)}")
 
         with st.spinner("Categorizing results..."):
             support, contradict, nei = categorize_results(predicted_labels)
 
+        # Prepare arguments for get_results() function
         support_args = Namespace(
             db=db, results_list=support, rationales=rationales_selected
         )
@@ -71,56 +84,72 @@ def main(args):
             contradicting_results = get_results(contradict_args)
             nei_results = get_results(nei_args)
 
-        if options == "Supporting":
+        # Display results to users
+        if options == "Supporting articles":
             if len(supporting_results) > 0:
                 display_results(supporting_results)
             else:
-                st.write("No articles of this type found.")
-        elif options == "Contradicting":
+                st.write("")
+                st.write("")
+                st.write("No supporting articles found.")
+        elif options == "Contradicting articles":
             if len(contradicting_results) > 0:
                 display_results(contradicting_results)
             else:
-                st.write("No articles of this type found.")
+                st.write("")
+                st.write("")
+                st.write("No contradicting articles found.")
         else:
-            assert options == "Relevant"
             if len(nei_results) > 0:
                 display_results(nei_results)
             else:
-                st.write("No articles of this type found.")
+                st.write("")
+                st.write("")
+                st.write("No other relevant but inconclusive articles found.")
 
 
 # Connect to database
-@st.cache(hash_funcs={sqlite3.Connection: id})
+@st.cache(hash_funcs={sqlite3.Connection: id}, show_spinner=False)
 def start_connection(databse_url):
     db = sqlite3.connect(databse_url, check_same_thread=False)
     return db
 
 
 # Load abstract retrieval model
-@st.cache
+@st.cache(show_spinner=False)
 def load_ar_model(args):
     ar_model = load_colbert(args, do_log=True)
     return ar_model
 
 
 # Load sentence selection model
-@st.cache
+@st.cache(show_spinner=False)
 def load_ss_model():
     ss_model = SS_MonoT5()
     return ss_model
 
 
 # Load label prediction model
-@st.cache
+@st.cache(show_spinner=False)
 def load_lp_model():
     lp_model = LP_MonoT5()
     return lp_model
 
 
+# Function that checks arguments of the search function below
+def check_search_args(args):
+    query = args.query
+    return query
+
+
 # Search database for relevant abstracts and rationale sentences in abstracts
-# and predict labels
-@st.cache
-def search(query, ar_model, ss_model, lp_model):
+# and predict labels for those abstracts
+@st.cache(hash_funcs={Namespace: check_search_args}, show_spinner=False)
+def search(args):
+    query = args.query
+    ar_model = args.ar_model
+    ss_model = args.ss_model
+    lp_model = args.lp_model
 
     # Query input
     query_dict = {}
@@ -136,7 +165,7 @@ def search(query, ar_model, ss_model, lp_model):
 
 
 # Categorize results into 3 lists: support, contradict, and NEI (not enough information)
-@st.cache
+@st.cache(show_spinner=False)
 def categorize_results(predicted_labels):
     support, contradict, nei = [], [], []
 
@@ -160,7 +189,7 @@ def check_get_results_args(args):
     return (id(db), results_list, rationales)
 
 
-@st.cache(hash_funcs={Namespace: check_get_results_args})
+@st.cache(hash_funcs={Namespace: check_get_results_args}, show_spinner=False)
 def get_results(args):
     db = args.db
     results_list = args.results_list
@@ -218,7 +247,7 @@ def check_retrieve_info_args(args):
 
 
 # Retrieve information about an article when provided with the abstract id
-@st.cache(hash_funcs={Namespace: check_retrieve_info_args})
+@st.cache(hash_funcs={Namespace: check_retrieve_info_args}, show_spinner=False)
 def retrieve_info(retrieve_args):
     db = retrieve_args.db
     abstract_id = retrieve_args.abstract_id
