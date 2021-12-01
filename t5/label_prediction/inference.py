@@ -4,6 +4,7 @@ from typing import OrderedDict
 
 from nltk import sent_tokenize
 
+from config.config import logger
 from t5.base import Query, Text
 
 
@@ -44,6 +45,8 @@ def label_prediction(query, rationales_selected, LP_MonoT5_model):
         q = Query(text=query.strip())
         all_queries.append(q)
 
+    logger.info("Predicting labels for abstracts...")
+
     # Score each abstract
     LP_scored_documents = LP_MonoT5_model.rescore(
         queries=all_queries, texts=all_documents
@@ -78,6 +81,8 @@ def label_prediction(query, rationales_selected, LP_MonoT5_model):
 
         # Record the predicted label for this abstract
         predicted_labels[doc_ids[i]] = label
+
+    logger.info("Finished predicting labels for abstracts...")
 
     db.close()
 

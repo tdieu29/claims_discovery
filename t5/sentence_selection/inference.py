@@ -4,6 +4,7 @@ from typing import OrderedDict
 
 from nltk import sent_tokenize
 
+from config.config import logger
 from t5.base import Query, Text
 
 
@@ -38,6 +39,8 @@ def rationale_selection(query, abstracts_retrieved, SS_MonoT5_model):
             key = str(id) + "#" + str(i)
             all_sentences[key] = {"score": None, "text": sentences[i].strip()}
 
+    logger.info("Selecting rationales sentences...")
+
     # Score each sentence in each abstract
     SS_scored_documents = SS_MonoT5_model.rescore(
         queries=all_queries, texts=all_documents
@@ -67,6 +70,8 @@ def rationale_selection(query, abstracts_retrieved, SS_MonoT5_model):
         if math.exp(all_sentences[key]["score"]) >= 0.999:
             rationales_selected[abstract_id] = rationales_selected.get(abstract_id, [])
             rationales_selected[abstract_id].append(sent_idx)
+
+    logger.info("Finished selecting rationales sentences...")
 
     db.close()
 
