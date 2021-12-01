@@ -22,6 +22,10 @@ def rationale_selection(query, abstracts_retrieved, SS_MonoT5_model):
         abstract_text = cur.execute(
             "SELECT Abstract FROM articles WHERE Article_Id = (?)", (id,)
         ).fetchone()[0]
+
+        if abstract_text is None:
+            abstract_text = ""
+
         sentences = sent_tokenize(abstract_text)
 
         for i in range(len(sentences)):
