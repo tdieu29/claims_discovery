@@ -25,6 +25,8 @@ class SQLite:
         "Journal": "TEXT",
         "Url": "TEXT",
         "Entry_Date": "DATETIME",
+        "Num_Sentences": "INTEGER",
+        "Num_Sections": "INTEGER",
     }
 
     # Sentences schema
@@ -39,31 +41,37 @@ class SQLite:
     SECTIONS = {
         "Section_Id": "INTEGER PRIMARY KEY",
         "Article_Id": "TEXT",
-        "Span_Index": "INTEGER",
-        "Text": "TEXT",
+        "Section_Index": "INTEGER",
+        "Section": "TEXT",
     }
 
     # SQL statements
     CREATE_TABLE = "CREATE TABLE IF NOT EXISTS {table} ({fields})"
     INSERT_ROW = "INSERT INTO {table} ({columns}) VALUES ({values})"
-    CREATE_INDEX = "CREATE INDEX section_article ON sections (Article_Id, Span_Index)"
 
     # Merge SQL statements
     ATTACH_DB = "ATTACH DATABASE '{path}' as {name}"
     DETACH_DB = "DETACH DATABASE '{name}'"
     MAX_ENTRY = "SELECT MAX(Entry_Date) from {name}.articles"
     LOOKUP_ARTICLE = (
-        "SELECT Article_Id FROM {name}.articles WHERE Article_Id = ? AND Entry = ?"
+        "SELECT Article_Id FROM {name}.articles WHERE Article_Id = ? AND Entry_Date = ?"
     )
+    COUNT_NUM_SENTENCES = (
+        "SELECT Num_Sentences FROM {name}.articles WHERE Article_Id = ?"
+    )
+    COUNT_NUM_SECTIONS = "SELECT Num_Sections FROM {name}.articles WHERE Article_Id = ?"
     MERGE_ARTICLE = (
         "INSERT INTO articles SELECT * FROM {name}.articles WHERE Article_Id = ?"
     )
-    MERGE_SECTIONS = (
-        "INSERT INTO sections SELECT * FROM {name}.sections WHERE Article_Id = ?"
-    )
-    UPDATE_ENTRY = "UPDATE articles SET Entry_Date = ? WHERE Article_Id = ?"
-    ARTICLE_COUNT = "SELECT COUNT(1) FROM articles"
+    MERGE_SENTENCE = "INSERT INTO sentences SELECT * FROM {name}.sentences WHERE Article_Id = ? AND Section_Index = ?"
+    MERGE_SECTION = "INSERT INTO sections SELECT * FROM {name}.sections WHERE Article_Id = ? AND Sentence_Index = ?"
+    UPDATE_ARTICLE_ENTRY = "UPDATE articles SET Entry_Date = ? WHERE Article_Id = ?"
+
+    ARTICLE_COUNT = "SELECT COUNT(*) FROM articles"
     SECTION_COUNT = "SELECT MAX(Section_Id) FROM sections"
+    SECTION_COUNT_VERIFY = "SELECT COUNT(*) FROM sections"
+    SENTENCE_COUNT = "SELECT MAX(Sentence_Id) FROM sentences"
+    SENTENCE_COUNT_VERIFY = "SELECT COUNT(*) FROM sentences"
 
     def __init__(self, outdir):
         """
@@ -79,12 +87,12 @@ class SQLite:
         # Output database file
         dbfile = os.path.join(outdir, "articles.sqlite")
 
-        # Delete existing file ?????
+        # Delete existing/ old database
         if os.path.exists(dbfile):
             os.remove(dbfile)
 
         # Index fields
-        self.aindex, self.sindex, self.sentIndex = 0, 0, 0
+        self.aindex, self.sentIndex, self.secIndex = 0, 0, 0
 
         # Create output database
         self.db = sqlite3.connect(dbfile)
@@ -95,11 +103,11 @@ class SQLite:
         # Create `articles` table
         self.create(SQLite.ARTICLES, "articles")
 
-        # Create `sections` table
-        self.create(SQLite.SECTIONS, "sections")
-
         # Create `sentences` table
         self.create(SQLite.SENTENCES, "sentences")
+
+        # Create `sections` table
+        self.create(SQLite.SECTIONS, "sections")
 
         # Start transaction
         self.cur.execute("BEGIN")
@@ -175,7 +183,16 @@ class SQLite:
         return values
 
     def save(self, article):
-        # Article row
+        # Number of sentences and number of sections in this article
+        sentences_count = len(article.sentences)
+        sections_count = len(article.sections)
+
+        article.metadata = article.metadata + (
+            sentences_count,
+            sections_count,
+        )
+
+        # Insert article row
         self.insert(SQLite.ARTICLES, "articles", article.metadata)
 
         # Increment number of articles processed
@@ -195,14 +212,14 @@ class SQLite:
             )
             self.sentIndex += 1
 
-        for (span_idx, text) in article.sections:
-            # section_id, article_id, span_index, text
+        for (section_idx, section) in article.sections:
+            # section_id, article_id, section_index, section
             self.insert(
                 SQLite.SECTIONS,
                 "sections",
-                (self.sindex, article.uid(), span_idx, text),
+                (self.secIndex, article.uid(), section_idx, section),
             )
-            self.sindex += 1
+            self.secIndex += 1
 
     def merge(self, url, ids):
         # List of IDs to set for processing
@@ -216,11 +233,11 @@ class SQLite:
 
         # Only process records newer than 5 days before the last run
         lastrun = self.cur.execute(SQLite.MAX_ENTRY.format(name=alias)).fetchone()[0]
-        print("lastrun1: ", print(lastrun))
+        print("lastrun1: ", lastrun)
         lastrun = datetime.strptime(lastrun, "%Y-%m-%d") - timedelta(days=5)
-        print("lastrun2: ", print(lastrun))
+        print("lastrun2: ", lastrun)
         lastrun = lastrun.strftime("%Y-%m-%d")
-        print("lastrun3: ", print(lastrun))
+        print("lastrun3: ", lastrun)
 
         # Search for existing articles
         for uid, date in ids.items():
@@ -231,20 +248,61 @@ class SQLite:
             else:
                 # Copy existing record
                 self.cur.execute(SQLite.MERGE_ARTICLE.format(name=alias), [uid])
-                self.cur.execute(SQLite.MERGE_SECTIONS.format(name=alias), [uid])
+                num_sentences = self.cur.execute(
+                    SQLite.COUNT_NUM_SENTENCES.format(name=alias), [uid]
+                )
+                num_sections = self.cur.execute(
+                    SQLite.COUNT_NUM_SECTIONS.format(name=alias), [uid]
+                )
+
+                for sent_idx in range(num_sentences):
+                    self.cur.execute(
+                        SQLite.MERGE_SENTENCE.format(name=alias), [uid, sent_idx]
+                    )
+
+                for sec_idx in range(num_sections):
+                    self.cur.execute(
+                        SQLite.MERGE_SECTION.format(name=alias), [uid, sec_idx]
+                    )
 
                 # Sync entry date with ids list
-                self.cur.execute(SQLite.UPDATE_ENTRY, [date, uid])
+                self.cur.execute(SQLite.UPDATE_ARTICLE_ENTRY, [date, uid])
 
         # Set current index positions
         self.aindex = (
             int(self.cur.execute(SQLite.ARTICLE_COUNT.format(name=alias)).fetchone()[0])
             + 1
         )
-        self.sindex = (
+
+        self.secIndex = (
             int(self.cur.execute(SQLite.SECTION_COUNT.format(name=alias)).fetchone()[0])
             + 1
         )
+        secIndex_verify = (
+            int(
+                self.cur.execute(
+                    SQLite.SECTION_COUNT_VERIFY.format(name=alias)
+                ).fetchone()[0]
+            )
+            + 1
+        )
+        assert self.secIndex == secIndex_verify
+
+        self.sentIndex = (
+            int(
+                self.cur.execute(SQLite.SENTENCE_COUNT.format(name=alias)).fetchone()[0]
+            )
+            + 1
+        )
+        sentIndex_verify = (
+            int(
+                self.cur.execute(
+                    SQLite.SENTENCE_COUNT_VERIFY.format(name=alias)
+                ).fetchone()[0]
+            )
+            + 1
+        )
+        assert self.sentIndex == sentIndex_verify
 
         # Commit transaction
         self.db.commit()
@@ -267,9 +325,6 @@ class SQLite:
 
     def complete(self):
         logger.info(f"Total articles inserted: {self.aindex}")
-
-        # Create articles index for spans table
-        self.cur.execute(SQLite.CREATE_INDEX)
 
     def close(self):
         self.db.commit()
