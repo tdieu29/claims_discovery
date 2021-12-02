@@ -30,9 +30,3 @@ class Article:
         """
 
         return self.metadata[0]
-
-    def entry_date(self):
-        """
-        Returns the entry date of the article.
-        """
-        return self.metadata[-1]
