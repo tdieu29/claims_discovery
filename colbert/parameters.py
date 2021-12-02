@@ -50,5 +50,4 @@ def retrieve_params():
         "39",
         "--num_faiss_indexes",
         "39",
-        # "queries", "", # Uncomment if necessary
     ]
