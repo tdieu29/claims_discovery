@@ -114,7 +114,7 @@ class Arguments:
             type=int,
         )
         self.add_argument(
-            "--final_num_abstracts", dest="final_num_abstracts", default=50, type=int
+            "--final_num_abstracts", dest="final_num_abstracts", default=100, type=int
         )
 
     def add_argument(self, *args, **kw_args):
