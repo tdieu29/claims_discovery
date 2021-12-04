@@ -5,12 +5,12 @@ from pathlib import Path
 from typing import OrderedDict
 
 import streamlit as st
-from config.config import logger
 
 sys.path.insert(1, Path(__file__).parent.parent.absolute().__str__())
 
 from colbert.retrieve import retrieve_abstracts  # noqa: E402
 from colbert.utils.utils import load_colbert  # noqa: E402
+from config.config import logger  # noqa: E402
 from t5.label_prediction.inference import label_prediction  # noqa: E402
 from t5.label_prediction.model import LP_MonoT5  # noqa: E402
 from t5.sentence_selection.inference import rationale_selection  # noqa: E402
