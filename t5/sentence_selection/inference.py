@@ -4,6 +4,7 @@ from typing import OrderedDict
 
 from nltk import sent_tokenize
 
+from config.config import logger
 from t5.base import Query, Text
 
 
@@ -22,6 +23,10 @@ def rationale_selection(query, abstracts_retrieved, SS_MonoT5_model):
         abstract_text = cur.execute(
             "SELECT Abstract FROM articles WHERE Article_Id = (?)", (id,)
         ).fetchone()[0]
+
+        if abstract_text is None:
+            abstract_text = ""
+
         sentences = sent_tokenize(abstract_text)
 
         for i in range(len(sentences)):
@@ -33,6 +38,8 @@ def rationale_selection(query, abstracts_retrieved, SS_MonoT5_model):
 
             key = str(id) + "#" + str(i)
             all_sentences[key] = {"score": None, "text": sentences[i].strip()}
+
+    logger.info("Selecting rationales sentences...")
 
     # Score each sentence in each abstract
     SS_scored_documents = SS_MonoT5_model.rescore(
@@ -48,7 +55,9 @@ def rationale_selection(query, abstracts_retrieved, SS_MonoT5_model):
             == all_documents[i].text
             == all_sentences[keys[i]]["text"]
         )
-        assert SS_scored_documents[i].score is None
+
+        assert all_sentences[keys[i]]["score"] is None
+
         all_sentences[keys[i]]["score"] = SS_scored_documents[i].score
 
     # Select rationale sentences in each abstract
@@ -56,14 +65,13 @@ def rationale_selection(query, abstracts_retrieved, SS_MonoT5_model):
 
     for key in all_sentences:
         abstract_id, sent_idx = key.split("#")
-        abstract_id = int(abstract_id)
         sent_idx = int(sent_idx)
 
         if math.exp(all_sentences[key]["score"]) >= 0.999:
             rationales_selected[abstract_id] = rationales_selected.get(abstract_id, [])
             rationales_selected[abstract_id].append(sent_idx)
 
-    assert len(rationales_selected) == len(top_50_article_ids)
+    logger.info("Finished selecting rationales sentences...")
 
     db.close()
 

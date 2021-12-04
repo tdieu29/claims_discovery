@@ -37,8 +37,4 @@ dvc:
 	dvc add cord19_data/metadata/entry-dates.csv
 	dvc add cord19_data/metadata/metadata.csv
 
-	dvc add https://drive.google.com/drive/u/0/folders/112AvV5iSXu0KkItAKhhMPZjwHHmIYyy4 \
-			-o t5/checkpoints/sentence_selection --to-remote -r stores
-	dvc add https://drive.google.com/drive/u/0/folders/12eBOXaFeQ9ww-hjo7TRRD9UB6QrRJnm7 \
-			-o t5/checkpoints/label_prediction --to-remote -r stores
 	dvc push

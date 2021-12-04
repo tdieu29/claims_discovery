@@ -1,8 +1,7 @@
 __pycache__
-venv
-.env
-stores
-logs
+.dvc
+.github
+.gitignore
 ETL/cord19/test.py
 streamlit/test.py
 colbert/faiss_indexes/BioSciNF.L2.8x2970159/abstracts_retrieved

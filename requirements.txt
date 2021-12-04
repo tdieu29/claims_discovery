@@ -41,6 +41,7 @@ dpath==2.0.5
 dulwich==0.20.25
 dvc==2.7.4
 entrypoints==0.3
+faiss-cpu==1.7.1.post2
 fastapi==0.68.1
 filelock==3.3.2
 #flake8==3.9.2
@@ -129,6 +130,7 @@ pyflakes==2.3.1
 pygit2==1.6.1
 Pygments==2.10.0
 pygtrie==2.4.2
+Pympler==0.9
 pyOpenSSL==21.0.0
 pyparsing==2.4.7
 pyrsistent==0.18.0
@@ -144,7 +146,7 @@ PyYAML==5.4.1
 pyzmq==22.3.0
 regex==2021.8.3
 requests==2.26.0
-rich==10.10.0
+rich==10.14.0
 rsa==4.7.2
 ruamel.yaml==0.17.16
 ruamel.yaml.clib==0.2.6
@@ -161,7 +163,7 @@ sklearn==0.0
 smmap==4.0.0
 speedcopy==2.1.0
 starlette==0.14.2
-streamlit==0.88.0
+streamlit==1.2.0
 subprocess32==3.5.4
 tabulate==0.8.9
 termcolor==1.1.0

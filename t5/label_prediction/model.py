@@ -16,7 +16,7 @@ from t5.tokenize import QueryDocumentBatch, T5BatchTokenizer
 class LP_MonoT5:
     def __init__(
         self,
-        pretrained_model_name_or_path="t5/checkpoints/label_prediction",
+        pretrained_model_name_or_path="t5/checkpoints/label_prediction/checkpoint-2646",
         use_amp=False,
         token_false="▁false",
         token_true="▁true",
