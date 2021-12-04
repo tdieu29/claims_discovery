@@ -2,4 +2,6 @@ __pycache__
 .dvc
 .github
 .gitignore
-test.py
+ETL/cord19/test.py
+streamlit/test.py
+colbert/faiss_indexes/BioSciNF.L2.8x2970159/abstracts_retrieved
